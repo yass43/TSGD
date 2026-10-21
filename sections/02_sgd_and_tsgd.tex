@@ -1,15 +1,212 @@
 % !TEX root = ../main.tex
-\section{SGD and TSGD: Two Fundamental Mechanisms}
-\mbox{}\par
+\section{SGD and TSGD---Algorithms and Error Mechanisms}
+\label{sec:algorithms-and-errors}
 
 \subsection{Algorithms and Assumptions}
-\mbox{}\par
+\label{subsec:algorithms-and-assumptions}
+
+\begin{assumption}[Smooth, lower-bounded objective]
+\label{ass:smooth-objective}
+The differentiable function $f:\mathbb{R}^d\to\mathbb{R}$ is bounded below,
+and its gradient is $L$-Lipschitz:
+$\|\nabla f(x)-\nabla f(y)\|\leq L\|x-y\|$ for all $x,y$.
+\end{assumption}
+
+\begin{assumption}[Unbiased stochastic gradient oracle]
+\label{ass:unbiased-oracle}
+The oracle $h(x,\xi)$ satisfies
+$\mathbb{E}_{\xi}[h(x,\xi)]=\nabla f(x)$ for every $x$. Each sample used in
+an update is fresh relative to the preceding iterates and estimates.
+\end{assumption}
+
+Starting from $x_0$ and using positive deterministic stepsizes $\eta_k$,
+SGD has the iterate update and estimator rule
+\begin{align}
+x_{k+1}&=x_k-\eta_k g_k, \label{eq:sgd-update}\\
+g_k&=h(x_k,\xi_{k+1}). \label{eq:sgd-estimate}
+\end{align}
+TSGD starts with an arbitrary gradient estimate $g_0$ and has the
+corresponding rules
+\begin{align}
+x_{k+1}&=x_k-\eta_k g_k, \label{eq:tsgd-iterate}\\
+g_{k+1}&=g_k+D_{k+1}. \label{eq:tsgd-estimate}
+\end{align}
+For the oracle in Assumption~\ref{ass:unbiased-oracle}, the transported
+increment can be formed by evaluating the \emph{same} fresh sample at both
+endpoints:
+\begin{equation}
+\label{eq:shared-sample-increment}
+D_{k+1}
+  =h(x_{k+1},\xi_{k+1})-h(x_k,\xi_{k+1}).
+\end{equation}
+The two algorithms describe separate runs. An SGD step uses one stochastic
+gradient evaluation; the displayed TSGD transport step uses two. The
+initial estimate $g_0$ may be random or biased; we assume only that
+$\mathbb{E}[\|g_0-\nabla f(x_0)\|^2]<\infty$.
+
+\begin{assumption}[Bounded variance]
+\label{ass:bounded-variance}
+The bounded-variance (BV) condition holds: for some $\sigma^2\geq0$,
+the pointwise gradient noise satisfies
+\begin{equation}
+\label{eq:bounded-variance}
+\mathbb{E}_{\xi}\bigl[\|h(x,\xi)-\nabla f(x)\|^2\bigr]
+  \leq \sigma^2
+\qquad\text{for every }x.
+\end{equation}
+\end{assumption}
+
+For transport, let $\mathcal F_k$ contain all randomness available before
+$D_{k+1}$ is sampled, including $x_{k+1}$ and $g_k$, and set
+$m_k:=\nabla f(x_{k+1})-\nabla f(x_k)$. The TSGD analysis uses the following
+two conditions on the increments actually generated along the trajectory.
+
+\begin{assumption}[Unbiased transport]
+\label{ass:unbiased-transport}
+The increment $D_{k+1}$ is conditionally unbiased:
+\begin{equation}
+\label{eq:unbiased-transport}
+\mathbb{E}[D_{k+1}\mid\mathcal F_k]=m_k.
+\end{equation}
+\end{assumption}
+
+\begin{assumption}[Centered $\delta$-similarity]
+\label{ass:centered-similarity}
+For some $\delta\geq0$, the conditional mean-square transport error obeys
+\begin{equation}
+\label{eq:centered-similarity}
+\mathbb{E}\bigl[\|D_{k+1}-m_k\|^2\mid\mathcal F_k\bigr]
+  \leq\delta^2\|x_{k+1}-x_k\|^2.
+\end{equation}
+\end{assumption}
+
+Assumptions~\ref{ass:unbiased-oracle} and \ref{ass:bounded-variance}
+describe the usual SGD oracle and its noise. TSGD needs
+Assumptions~\ref{ass:unbiased-transport} and
+\ref{ass:centered-similarity}, not a pointwise oracle or bounded variance.
+For the shared-sample construction \eqref{eq:shared-sample-increment}, a
+convenient sufficient condition for Assumption~\ref{ass:centered-similarity}
+is the all-pairs oracle bound
+\begin{equation}
+\label{eq:oracle-similarity}
+\mathbb{E}_{\xi}\left[
+\left\|
+  \bigl[h(x,\xi)-h(y,\xi)\bigr]
+  -\bigl[\nabla f(x)-\nabla f(y)\bigr]
+\right\|^2\right]
+  \leq\delta^2\|x-y\|^2
+\qquad\text{for all }x,y.
+\end{equation}
+The same $\xi$ appears at $x$ and $y$. More generally, the conditional
+assumptions allow increments $D_{k+1}$ that do not come from two pointwise
+oracle evaluations. We compare the noise conditions in Section~5.
 
 \subsection{Understanding Similarity}
-\mbox{}\par
+\label{subsec:understanding-similarity}
+
+The parameter $\delta$ measures how accurately a stochastic difference
+tracks the \emph{true gradient change}. It does not measure the size of the
+gradient change itself. The subtraction in
+\eqref{eq:oracle-similarity} is what allows $\delta$ to vanish even when
+the true gradient changes substantially. Consequently, an objective with
+substantial curvature can still have noiseless transport.
+
+For a finite sum $f(x)=\frac1n\sum_{i=1}^n f_i(x)$, consider quadratic
+components
+\[
+f_i(x)=\tfrac12 x^\top A_i x+b_i^\top x+c_i,
+\qquad A_i=A_i^\top,
+\]
+and sample $i$ uniformly, so that $h(x,i)=\nabla f_i(x)$. Write
+$\bar A=\frac1n\sum_i A_i$. Then the centered difference in
+\eqref{eq:oracle-similarity} is
+\begin{equation}
+\label{eq:quadratic-difference-noise}
+\bigl[\nabla f_i(x)-\nabla f_i(y)\bigr]
+-\bigl[\nabla f(x)-\nabla f(y)\bigr]
+  =(A_i-\bar A)(x-y).
+\end{equation}
+The linear terms $b_i$ disappear, however different they may be. The
+smallest constant in the all-pairs bound \eqref{eq:oracle-similarity}
+is therefore
+\[
+\delta_{\min}^2
+  =\lambda_{\max}\!\left(
+    \frac1n\sum_{i=1}^n(A_i-\bar A)^2
+  \right),
+\]
+which measures variation among the component Hessians. By contrast, the
+smoothness constant of the average quadratic is
+$L=\|\bar A\|_{\mathrm{op}}$.
+
+There is no fixed ordering between $\delta$ and $L$. If all $A_i$ coincide,
+then $\delta_{\min}=0$ even when $L$ is large and the $b_i$ make individual
+gradients very noisy. In the opposite direction, take $n\geq3$ scalar
+components with $f_1(x)=\frac{nL}{2}x^2$ and $f_i(x)=0$ for $i\geq2$.
+Their average is $f(x)=\frac L2x^2$, yet
+$\delta_{\min}=L\sqrt{n-1}>L$. These examples use finite sums only to make
+the distinction visible. What matters for transport is how closely a
+\emph{stochastic gradient difference} matches the corresponding
+\emph{deterministic gradient difference}. The parameter $\delta$ measures
+that discrepancy per unit displacement, regardless of the objective's
+structure.
 
 \subsection{The Martingale Interpretation}
-\mbox{}\par
+\label{subsec:martingale-interpretation}
 
-\subsection{The Descent Interpretation}
-\mbox{}\par
+Define the estimation error, its mean-square size, and the centered
+transport error by
+\[
+e_k:=g_k-\nabla f(x_k),\qquad
+E_k:=\mathbb{E}[\|e_k\|^2],\qquad
+d_{k+1}:=D_{k+1}-m_k.
+\]
+The update \eqref{eq:tsgd-estimate} gives the exact recursion
+\begin{equation}
+\label{eq:estimation-error-recursion}
+e_{k+1}=e_k+d_{k+1},
+\qquad
+\mathbb{E}[d_{k+1}\mid\mathcal F_k]=0.
+\end{equation}
+Thus $(e_k)$ is a martingale, starting from whatever error is present in
+$g_0$. Because $e_k$ is measurable with respect to $\mathcal F_k$, the cross
+term vanishes when we square \eqref{eq:estimation-error-recursion} and take
+expectations. Hence
+\begin{equation}
+\label{eq:transport-error-identity}
+E_{k+1}=E_k+\mathbb{E}[\|d_{k+1}\|^2],
+\qquad
+E_k=E_0+\sum_{t=0}^{k-1}\mathbb{E}[\|d_{t+1}\|^2].
+\end{equation}
+Initialization error persists in this identity, while centered transport
+errors add to its mean-square size. The similarity condition further gives
+\begin{equation}
+\label{eq:transport-error-growth}
+E_k\leq E_0+\delta^2\sum_{t=0}^{k-1}
+  \eta_t^2\mathbb{E}[\|g_t\|^2].
+\end{equation}
+
+There is also a descent interpretation. At step $k$, TSGD uses
+$g_k=\nabla f(x_k)+e_k$, which is the gradient at $x_k$ of the linearly
+tilted objective $x\mapsto f(x)+\langle e_k,x\rangle$. This viewpoint
+interprets $e_k$ as the current tilt; the tilt changes with the
+transport error $d_{k+1}$.
+
+\subsection{Comparing the Error Mechanisms}
+\label{subsec:comparing-error-mechanisms}
+
+SGD draws a new gradient estimate at every step. Under
+Assumptions~\ref{ass:unbiased-oracle} and \ref{ass:bounded-variance},
+each estimate is unbiased given $x_k$ and has mean-square error at most
+$\sigma^2$. The next estimate does not inherit the preceding estimator
+error, although earlier noisy steps still affect the trajectory.
+
+TSGD instead carries its estimate forward. Its error consists of the
+initial error plus all subsequent transport errors, exactly as
+\eqref{eq:transport-error-identity} shows. When $\delta$ and the step
+lengths are small, each new transport error is locally small; the sum in
+\eqref{eq:transport-error-growth} shows why controlling their accumulation
+is the central task of the convergence analysis in Section~3. Accurate
+initialization and small noise variation can favor TSGD, while accurate
+fresh gradients can favor SGD when transport is noisy. Neither method
+dominates in general. Section~5 develops the comparison in detail.
