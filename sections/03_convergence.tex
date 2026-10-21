@@ -1,3 +1,255 @@
 % !TEX root = ../main.tex
 \section{Convergence Theory of TSGD}
-\mbox{}\par
+\label{sec:tsgd-convergence}
+
+\subsection{Descent and Accumulation of Transport Errors}
+\label{subsec:descent-and-accumulation}
+
+Fix a horizon $K\geq1$ and a constant stepsize $\eta>0$. In addition to
+$E_k=\mathbb{E}[\|e_k\|^2]$ from Section~\ref{subsec:martingale-interpretation},
+write
+\[
+f_{\inf}:=\inf_x f(x),\qquad
+\Delta_0:=f(x_0)-f_{\inf},\qquad
+F_k:=\mathbb{E}[f(x_k)-f_{\inf}],
+\]
+\[
+G_k:=\mathbb{E}[\|\nabla f(x_k)\|^2],
+\qquad
+M_k:=\mathbb{E}[\|g_k\|^2],
+\qquad
+q_k:=\mathbb{E}[\|d_{k+1}\|^2].
+\]
+We take $x_0$ to be deterministic, so $F_0=\Delta_0$, but allow $g_0$
+to be random and biased. The case $L=0$ is trivial under
+Assumption~\ref{ass:smooth-objective}: $f$ is then constant. Hence we
+take $L>0$ below.
+
+Smoothness and $x_{k+1}=x_k-\eta g_k$ give
+\[
+f(x_{k+1})
+\leq f(x_k)-\eta\langle\nabla f(x_k),g_k\rangle
+       +\frac{L\eta^2}{2}\|g_k\|^2.
+\]
+Using $g_k=\nabla f(x_k)+e_k$ and
+$2\langle\nabla f(x_k),g_k\rangle
+=\|\nabla f(x_k)\|^2+\|g_k\|^2-\|e_k\|^2$, we obtain the fundamental
+descent inequality
+\begin{equation}
+\label{eq:tsgd-fundamental-descent}
+F_{k+1}
+\leq F_k-\frac{\eta}{2}G_k
+       -\frac{\eta}{2}(1-L\eta)M_k
+       +\frac{\eta}{2}E_k.
+\end{equation}
+The positive $E_k$ term is the cost of using an inaccurate gradient
+estimate. When $\eta\leq1/L$, the $M_k$ term has a favorable sign.
+This matters because the same $\|g_k\|$ determines the step length
+$\eta\|g_k\|$, and similarity bounds the mean-square error introduced
+by that transport step in terms of $\eta^2M_k$.
+
+The martingale identity \eqref{eq:transport-error-identity} gives
+$E_k=E_0+\sum_{t=0}^{k-1}q_t$. Summing over the first $K$ iterates and
+reversing the order of summation yields
+\begin{equation}
+\label{eq:weighted-error-accumulation}
+\sum_{k=0}^{K-1}E_k
+=K E_0+\sum_{t=0}^{K-2}(K-1-t)q_t.
+\end{equation}
+An early transport error receives a larger weight because it affects
+more subsequent iterates. By Assumption~\ref{ass:centered-similarity},
+\begin{equation}
+\label{eq:transport-error-step-bound}
+q_t
+\leq\delta^2\mathbb{E}[\|x_{t+1}-x_t\|^2]
+=\delta^2\eta^2 M_t.
+\end{equation}
+Thus the weighted error sum can be absorbed by the negative estimator-norm
+contribution in \eqref{eq:tsgd-fundamental-descent} when $\eta$ is small
+enough for the chosen horizon.
+
+\subsection{Main Convergence Theorem}
+\label{subsec:main-tsgd-theorem}
+
+\begin{mdframed}[
+  linecolor=black!55,
+  linewidth=0.7pt,
+  innerleftmargin=10pt,
+  innerrightmargin=10pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt
+]
+\begin{theorem}[Finite-horizon stationarity of TSGD]
+\label{thm:tsgd-stationarity}
+Suppose Assumptions~\ref{ass:smooth-objective},
+\ref{ass:unbiased-transport}, and \ref{ass:centered-similarity} hold,
+with $E_0<\infty$. Let $K\geq1$ and choose a constant $\eta>0$ such that
+\begin{equation}
+\label{eq:tsgd-step-condition}
+\boxed{L\eta+(K-1)\delta^2\eta^2\leq1.}
+\end{equation}
+For $0\leq k<K$, define
+\[
+c_k:=1-L\eta-\delta^2\eta^2(K-1-k)\geq0.
+\]
+Then
+\begin{equation}
+\label{eq:tsgd-full-bound}
+\frac1K\sum_{k=0}^{K-1}G_k
++\frac{2F_K}{\eta K}
++\frac1K\sum_{k=0}^{K-1}c_kM_k
+\leq\frac{2\Delta_0}{\eta K}+E_0.
+\end{equation}
+In particular,
+\begin{equation}
+\label{eq:tsgd-stationarity-bound}
+\boxed{\frac1K\sum_{k=0}^{K-1}
+\mathbb{E}[\|\nabla f(x_k)\|^2]
+\leq\frac{2\Delta_0}{\eta K}+E_0.}
+\end{equation}
+\end{theorem}
+\end{mdframed}
+
+\begin{proof}
+Sum \eqref{eq:tsgd-fundamental-descent} from $k=0$ to $K-1$, use
+$F_0=\Delta_0$, and substitute \eqref{eq:weighted-error-accumulation}:
+\[
+F_K+\frac{\eta}{2}\sum_{k=0}^{K-1}G_k
++\frac{\eta}{2}(1-L\eta)\sum_{k=0}^{K-1}M_k
+\leq\Delta_0+\frac{\eta K}{2}E_0
++\frac{\eta}{2}\sum_{t=0}^{K-2}(K-1-t)q_t.
+\]
+Apply \eqref{eq:transport-error-step-bound} and move its contribution
+to the left. The coefficient of $M_k$ becomes $c_k$, which is
+nonnegative by \eqref{eq:tsgd-step-condition}. Division by
+$\eta K/2$ proves \eqref{eq:tsgd-full-bound}. Since $F_K\geq0$, dropping
+it and the nonnegative estimator-norm sum gives
+\eqref{eq:tsgd-stationarity-bound}.
+\end{proof}
+
+The proof shows the central mechanism: descent pays for the cumulative
+noise of gradient transport. Neither Assumption~\ref{ass:unbiased-oracle}
+nor bounded variance (Assumption~\ref{ass:bounded-variance}) is needed;
+the increments need not come from a pointwise stochastic-gradient oracle.
+
+The recursion and single-run nonconvex guarantees have close
+precedents. SARAH-IN analyzes a finite-sum inner run with exact
+initialization \citep{nguyen2017sarah_nonconvex}; iSARAH-IN allows an
+inexact initial gradient \citep{nguyen2021inexact}; and PAGE-NS studies
+the no-refresh endpoint of PAGE with arbitrary initialization
+\citep{sokolov2022nonconvex}. Here the convergence guarantee is stated
+directly for conditionally unbiased gradient-change increments, with
+the terminal objective gap and estimator-norm contributions kept
+explicit. We do not claim the recursion or finite-horizon stationarity
+as a first discovery.
+
+\subsection{Optimized Guarantees and Interpretation}
+\label{subsec:optimized-tsgd-guarantees}
+
+The stationarity bound improves as $\eta$ increases, so choose the
+largest stepsize permitted by \eqref{eq:tsgd-step-condition}:
+\begin{equation}
+\label{eq:tsgd-optimal-step}
+\boxed{\eta^\star
+=\frac{2}{L+\sqrt{L^2+4(K-1)\delta^2}}.}
+\end{equation}
+This is the optimal choice for the theorem's sufficient condition, not
+a claim that larger stepsizes must fail. Substitution into
+\eqref{eq:tsgd-stationarity-bound} gives the exact optimized guarantee
+\begin{equation}
+\label{eq:tsgd-optimized-bound}
+\frac1K\sum_{k=0}^{K-1}G_k
+\leq
+\frac{\Delta_0}{K}
+\bigl(L+\sqrt{L^2+4(K-1)\delta^2}\bigr)+E_0.
+\end{equation}
+Since
+$\sqrt{L^2+4(K-1)\delta^2}\leq L+2\delta\sqrt{K-1}$, we also have
+\begin{equation}
+\label{eq:tsgd-simplified-bound}
+\boxed{\frac1K\sum_{k=0}^{K-1}G_k
+\leq
+\frac{2L\Delta_0}{K}
++\frac{2\delta\Delta_0}{\sqrt K}
++E_0.}
+\end{equation}
+The three terms separate deterministic optimization,
+$O(K^{-1})$; accumulated stochastic transport, $O(K^{-1/2})$; and
+initialization error, $E_0$.
+
+A smaller $\delta$ permits a larger step and reduces the transport
+term. When $(K-1)\delta^2$ is small relative to $L^2$, the admissible
+step is close to $1/L$ and the deterministic term is prominent. When
+$(K-1)\delta^2$ is large relative to $L^2$, transport determines a step
+of order $1/(\delta\sqrt K)$ and the $K^{-1/2}$ term dominates.
+
+With exact initialization, $E_0=0$ and there is no additive error floor
+in \eqref{eq:tsgd-simplified-bound}. With exact transport, $\delta=0$
+and \eqref{eq:tsgd-optimal-step} gives $\eta^\star=1/L$, while the
+bound retains $E_0$. If both are exact, TSGD is ordinary gradient
+descent. Transport alone does not correct an inaccurate $g_0$; the
+coefficient one on $E_0$ is sharp in general, as the example in
+Section~4 will show.
+
+For $\delta>0$, the admissible constant stepsize decreases with $K$.
+The theorem therefore guarantees performance for a \emph{prescribed
+finite horizon}; it does not assert asymptotic stationarity for a
+single infinite run with a fixed positive stepsize.
+
+\subsection{Iteration and Oracle Complexity}
+\label{subsec:tsgd-complexity}
+
+Let $R$ be uniform on $\{0,\ldots,K-1\}$ and independent of the TSGD
+run. Then
+$\mathbb{E}[\|\nabla f(x_R)\|^2]
+=K^{-1}\sum_{k=0}^{K-1}G_k$. For a target $\varepsilon>0$, we seek
+$\mathbb{E}[\|\nabla f(x_R)\|^2]\leq\varepsilon^2$.
+
+\begin{corollary}[Sufficient iteration horizon]
+\label{cor:tsgd-iteration-complexity}
+Under the conditions of Theorem~\ref{thm:tsgd-stationarity}, suppose
+$E_0\leq\varepsilon^2/3$ and use $\eta=\eta^\star$. It suffices to take
+an integer $K$ with
+\begin{equation}
+\label{eq:tsgd-iteration-complexity}
+\boxed{
+K\geq
+\max\left\{
+1,\,
+\frac{6L\Delta_0}{\varepsilon^2},\,
+\frac{36\delta^2\Delta_0^2}{\varepsilon^4}
+\right\}.}
+\end{equation}
+Then $\mathbb{E}[\|\nabla f(x_R)\|^2]\leq\varepsilon^2$.
+\end{corollary}
+
+\begin{proof}
+Under \eqref{eq:tsgd-iteration-complexity}, each of the first two
+terms on the right of \eqref{eq:tsgd-simplified-bound} is at most
+$\varepsilon^2/3$. The initialization term is at most
+$\varepsilon^2/3$ by assumption.
+\end{proof}
+
+The terms proportional to $\varepsilon^{-2}$ and
+$\varepsilon^{-4}$ are the deterministic and transport contributions,
+respectively. They quantify iterations; obtaining a sufficiently
+accurate $g_0$ may require additional oracle work.
+
+For example, suppose an unbiased pointwise oracle is available at
+$x_0$ with
+$\mathbb{E}_{\xi}[\|h(x_0,\xi)-\nabla f(x_0)\|^2]\leq\sigma_0^2$.
+If $g_0$ is the average of $B_0$ independent samples, then
+$E_0\leq\sigma_0^2/B_0$. Thus any integer
+\[
+B_0\geq\max\left\{1,\,
+\left\lceil\frac{3\sigma_0^2}{\varepsilon^2}\right\rceil\right\}
+\]
+meets the initialization requirement. This variance bound is needed
+only for this way of constructing $g_0$, not for
+Theorem~\ref{thm:tsgd-stationarity}.
+
+For the coupled pointwise-gradient construction
+\eqref{eq:shared-sample-increment}, a $K$-step run with $B_0$
+initialization samples requires at most $B_0+2(K-1)$ pointwise
+gradient evaluations. The final correction $D_K$ is unnecessary
+because the output is selected from $x_0,\ldots,x_{K-1}$.
