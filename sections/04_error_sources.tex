@@ -311,9 +311,14 @@ persistent offset and the noise accumulated afterward.
 \subsection{Summary of the Four Cases}
 \label{subsec:four-case-summary}
 
-For the stable quadratic model, the tracking-error limit and the
-stationarity limit coincide: $E_\infty=\lim_{k\to\infty}G_k$. The four
-cases are summarized below; in the exact-initialization row,
+The table compares the four initialization--transport regimes in our
+running quadratic model. The GD and tilted-GD identities under exact
+transport hold for general objectives, while the explicit residual
+formulas for stochastic transport rely on this model. It reports
+the limiting stationarity error $\lim_{k\to\infty}G_k=E_\infty$
+under the stable stepsize condition
+$0<\eta<2\lambda/(\lambda^2+\delta^2)$. Here $A$ is defined by
+\eqref{eq:quadratic-A}, and exact initialization gives
 $M_0=\lambda^2x_0^2$.
 \begin{center}
 \small
