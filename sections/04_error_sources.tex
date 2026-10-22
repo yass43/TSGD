@@ -226,20 +226,31 @@ E_\infty:=\lim_{k\to\infty}E_k
 =\frac{\eta\delta^2\lambda^2x_0^2}
        {2\lambda-\eta(\lambda^2+\delta^2)}.
 \end{equation}
-The finite sum of squared transport errors also makes $(e_k)$
-Cauchy in mean square. Hence $e_k\to e_\infty$ and
-$x_k=(g_k-e_k)/\lambda\to-e_\infty/\lambda$ in mean square. In
-particular,
+Indeed, $e_{t+1}-e_t=-\eta a_{t+1}g_t$ is conditionally centered.
+These martingale increments are orthogonal, so for $m>n$,
 \[
+\mathbb{E}[|e_m-e_n|^2]
+=\eta^2\delta^2\sum_{t=n}^{m-1}M_t
+\leq\frac{\eta^2\delta^2M_0}{1-\rho}\rho^n
+\longrightarrow0.
+\]
+Thus $e_k$ converges in mean square to some $e_\infty$. Since
+$g_k\to0$ in mean square as well,
+$x_k=(g_k-e_k)/\lambda$ converges in mean square to
+$x_\infty:=-e_\infty/\lambda$. Mean-square convergence gives
+$\mathbb E[|e_\infty|^2]=\lim_{k\to\infty}E_k=E_\infty$; hence
+\[
+\lim_{k\to\infty}M_k=0,
+\qquad
 \lim_{k\to\infty}G_k
 =\mathbb{E}[|\lambda x_\infty|^2]
-=E_\infty.
+=E_\infty>0\quad(x_0\neq0).
 \]
-When $x_0\neq0$, this limit is positive: the estimator converges to
-zero although the true gradient does not. This is \emph{false
-convergence}. A stable constant stepsize makes transport-error
-accumulation finite, but does not erase the resulting stationarity
-residual.
+For $x_0\neq0$, the estimator $g_k$ converges to zero in mean
+square, while the true gradient $\nabla f(x_k)$ does not: its
+mean-square norm approaches a positive residual. This is \emph{false
+convergence}: the estimator signals stationarity even though the
+objective has not reached it.
 
 \subsection{Inexact Initialization and Stochastic Transport}
 \label{subsec:inexact-init-stochastic-transport}
