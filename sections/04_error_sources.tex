@@ -118,40 +118,71 @@ deterministic optimization despite large additive oracle noise.
 \subsection{Inexact Initialization and Exact Transport}
 \label{subsec:inexact-init-exact-transport}
 
-Keep $\delta=0$, but let $g_0=\lambda x_0+e_0$ with arbitrary
-square-integrable $e_0$. The transport error vanishes, so $e_k=e_0$
-pathwise and $E_k=E_0$ for every $k$. Each run follows gradient
-descent on the linearly tilted objective
+Let $g_0=\nabla f(x_0)+e_0$ and suppose all transported differences
+are exact. Then $e_k=e_0$ for every $k$, and hence
 \[
-\widetilde f_{e_0}(x):=f(x)+e_0x,
-\qquad
-g_k=\widetilde f_{e_0}'(x_k).
+g_k=\nabla f(x_k)+e_0
+=\nabla\widetilde f_{e_0}(x_k),\qquad
+\widetilde f_{e_0}(x):=f(x)+\langle e_0,x\rangle.
 \]
-For the quadratic, the entire trajectory is explicit:
+Thus $E_k=E_0$ and TSGD is GD on the fixed, linearly tilted
+objective $\widetilde f_{e_0}$. Exact transport cannot correct the
+initial error.
+
+Theorem~\ref{thm:tsgd-stationarity} with $\delta=0$ gives, at the
+GD stepsize $\eta=1/L$,
+\begin{equation}
+\label{eq:exact-transport-inexact-init-bound}
+\frac1K\sum_{k=0}^{K-1}G_k
+\leq\frac{2L\Delta_0}{K}+E_0.
+\end{equation}
+If $e_0$ is fixed and $\widetilde f_{e_0}$ is bounded below,
+GD on that objective also gives
+$\nabla f(x_k)\to-e_0$ and
+$\|\nabla f(x_k)\|^2\to\|e_0\|^2$.
+The lower bound on $\widetilde f_{e_0}$ is needed only for this
+pathwise asymptotic claim, not for \eqref{eq:exact-transport-inexact-init-bound}.
+
+The obstruction is informational: for
+$f_c(x)=f(x)+\langle c,x\rangle$,
+$\nabla f_c(x)-\nabla f_c(y)=\nabla f(x)-\nabla f(y)$.
+Gradient differences cannot identify an unknown constant offset $c$.
+
+In the quadratic model, $\delta=0$ makes transport exact regardless
+of the additive noise $b$. With $g_0=\lambda x_0+e_0$ and
+$r=1-\eta\lambda$, the exact trajectory is
 \begin{equation}
 \label{eq:quadratic-tilted-trajectory}
-g_k=r^k g_0,\qquad
+g_k=r^k(\lambda x_0+e_0),\qquad
 x_k=r^k x_0-\frac{1-r^k}{\lambda}e_0.
 \end{equation}
-If $0<\eta<2/\lambda$, then $g_k\to0$ but
-$x_k\to-e_0/\lambda$ in mean square. Therefore
+If the initialization error is centered, $\mathbb E[e_0]=0$, then
+\begin{equation}
+\label{eq:quadratic-centered-init-stationarity}
+G_k=r^{2k}\lambda^2x_0^2+(1-r^k)^2E_0.
+\end{equation}
+If $0<\eta<2/\lambda$, then $x_k\to-e_0/\lambda$ in mean
+square and, even for biased $e_0$,
 \begin{equation}
 \label{eq:quadratic-init-residual}
 \lim_{k\to\infty}G_k=E_0.
 \end{equation}
-Consequently, $K^{-1}\sum_{k=0}^{K-1}G_k\to E_0$ as well. The
-coefficient one on $E_0$ in \eqref{eq:tsgd-stationarity-bound}
-therefore cannot be improved in general.
-
-The obstruction is informational, not peculiar to quadratics. For
-any vector $c$, define $f_c(x):=f(x)+\langle c,x\rangle$. Then
+For $\varepsilon>0$, choose $N$ such that
+$|G_k-E_0|\leq\varepsilon$ for $k\geq N$. Then, for $K>N$,
 \[
-\nabla f_c(x)-\nabla f_c(y)
-=\nabla f(x)-\nabla f(y).
+\left|\frac1K\sum_{k=0}^{K-1}G_k-E_0\right|
+\leq\frac1K\sum_{k=0}^{N-1}|G_k-E_0|+\varepsilon.
 \]
-Differences alone cannot identify the unknown constant gradient
-offset $c$; the initial estimate supplies that information. Exact
-gradient changes therefore cannot correct an inaccurate $g_0$.
+Letting $K\to\infty$ and then $\varepsilon\downarrow0$ gives,
+for the admissible choice $\eta=1/L=1/\lambda$,
+\[
+\lim_{K\to\infty}\frac1K\sum_{k=0}^{K-1}G_k
+=E_0
+=\lim_{K\to\infty}
+\left(\frac{2\Delta_0}{\eta K}+E_0\right).
+\]
+Thus the coefficient one on $E_0$ in
+\eqref{eq:tsgd-stationarity-bound} is sharp.
 
 \subsection{Exact Initialization and Stochastic Transport}
 \label{subsec:exact-init-stochastic-transport}
