@@ -46,22 +46,54 @@ variance $v>0$, ABC holds with $(A,B,C)=(0,1+v,0)$, but BV fails
 because the noise variance is $vx^2$. Thus ABC is strictly broader
 than BV.
 
-Neither ABC nor BV implies global similarity. Let
-$f(x)=x^2/2$ and $h(x,\xi)=x+\xi\sin(x^2)$ for a Rademacher $\xi$.
-The noise variance is at most one, so BV and ABC hold. But a finite
-similarity constant would make $\sin(x^2)$ globally Lipschitz, which
-is impossible since its derivative $2x\cos(x^2)$ is unbounded.
+Neither ABC nor BV implies global similarity. Take
+$f(x)=x^2/2$, so $\nabla f(x)=x$, and let
+$h(x,\xi)=x+\xi\sin(x^2)$ with a Rademacher $\xi$.
+The oracle is unbiased and its noise variance is
+$\mathbb E_{\xi}[|h(x,\xi)-\nabla f(x)|^2]=\sin^2(x^2)\leq1$.
+Hence BV holds with $\sigma^2=1$, and ABC follows with
+$(A,B,C)=(0,1,1)$. For a shared sample at $x$ and $y$, however,
+the centered difference error has second moment
+\[
+\mathbb E_{\xi}[|r(x,\xi)-r(y,\xi)|^2]
+=\bigl(\sin(x^2)-\sin(y^2)\bigr)^2.
+\]
+If \eqref{eq:oracle-similarity} held for a finite $\delta$, then
+\[
+\begin{aligned}
+|\sin(x^2)-\sin(y^2)|
+&\leq\delta|x-y| &&\text{for all }x,y,\\
+|2x\cos(x^2)|
+&=\lim_{y\to x}
+  \frac{|\sin(y^2)-\sin(x^2)|}{|y-x|}
+\leq\delta &&\text{for all }x.
+\end{aligned}
+\]
+But for $x_n=\sqrt{2\pi n}$,
+$|2x_n\cos(x_n^2)|=2\sqrt{2\pi n}\to\infty$, a contradiction.
 
-Conversely, similarity need not imply even ABC. Let
-$f(x)=\log\cosh x$ and
-$h(x,\xi)=\tanh x+\xi x$, where $\xi$ is centered with variance
-$\delta^2>0$. The centered difference noise is $\xi(x-y)$, so
-\eqref{eq:oracle-similarity} holds with equality. Yet BV fails
-because the pointwise noise variance is $\delta^2x^2$, and ABC
-would require a quadratic function of $x$ to be bounded by
-$2A\log\cosh x+B\tanh^2x+C=O(|x|)+O(1)$.
-These are comparisons of assumptions, not claims that either
-algorithm always performs better on the examples.
+Conversely, global similarity need not imply even ABC. Take
+$f(x)=\log\cosh x$, which is lower bounded and $1$-smooth, and
+$h(x,\xi)=\tanh x+\xi x$, where $\mathbb E[\xi]=0$ and
+$\mathbb E[\xi^2]=\delta^2>0$. Since $\nabla f(x)=\tanh x$,
+the oracle is unbiased. Its centered noise satisfies
+\[
+\mathbb E_{\xi}[|r(x,\xi)-r(y,\xi)|^2]
+=\delta^2(x-y)^2,
+\]
+so \eqref{eq:oracle-similarity} holds with equality. But the
+pointwise noise variance $\delta^2x^2$ is unbounded, ruling out BV.
+Moreover,
+$\mathbb E_{\xi}[|h(x,\xi)|^2]=\tanh^2x+\delta^2x^2$,
+while the ABC right-hand side obeys
+\[
+2A\log\cosh x+B\tanh^2x+C
+\leq 2A|x|+B+C.
+\]
+For any finite $A,B,C$, the quadratic term $\delta^2x^2$ cannot be
+bounded by this linear expression for all $x$. Thus similarity
+does not imply ABC. These examples compare assumptions, not the
+performance of SGD and TSGD on the respective objectives.
 
 \subsection{SGD Guarantees}
 \mbox{}\par
