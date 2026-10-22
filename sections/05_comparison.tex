@@ -1,9 +1,67 @@
 % !TEX root = ../main.tex
 \section{TSGD versus SGD: When Does Each Shine?}
-\mbox{}\par
+\label{sec:sgd-tsgd-comparison}
 
-\subsection{Assumptions}
-\mbox{}\par
+\subsection{Comparing Assumptions}
+\label{subsec:comparing-assumptions}
+
+To compare noise assumptions on a common pointwise oracle, write
+$h(x,\xi)=\nabla f(x)+r(x,\xi)$ with
+$\mathbb{E}_{\xi}[r(x,\xi)]=0$. Bounded variance (BV),
+Assumption~\ref{ass:bounded-variance}, imposes
+$\mathbb{E}_{\xi}[\|r(x,\xi)\|^2]\leq\sigma^2$ uniformly in $x$.
+The ABC condition instead bounds the oracle's second moment by
+\begin{equation}
+\label{eq:abc-condition}
+\mathbb{E}_{\xi}[\|h(x,\xi)\|^2]
+\leq 2A\bigl(f(x)-f_{\inf}\bigr)
+     +B\|\nabla f(x)\|^2+C
+\qquad\text{for all }x,
+\end{equation}
+for finite constants $A,B,C\geq0$ \citep{khaled2023better}.
+It permits the second moment to grow with objective suboptimality or
+the gradient norm. Under unbiasedness,
+\[
+\mathbb{E}_{\xi}[\|h(x,\xi)\|^2]
+=\|\nabla f(x)\|^2
+ +\mathbb{E}_{\xi}[\|r(x,\xi)\|^2],
+\]
+so BV implies ABC with $(A,B,C)=(0,1,\sigma^2)$.
+
+By contrast, the all-pairs form of $\delta$-similarity in
+\eqref{eq:oracle-similarity} controls
+\[
+\mathbb{E}_{\xi}
+  [\|r(x,\xi)-r(y,\xi)\|^2]
+\leq\delta^2\|x-y\|^2.
+\]
+It measures variation of \emph{coupled} gradient noise, not its
+pointwise magnitude. This global oracle condition is sufficient for
+Assumption~\ref{ass:centered-similarity}; the conditional
+trajectory-level assumption used by TSGD can be weaker.
+
+The inclusions stop at BV $\Rightarrow$ ABC. For example, with
+$f(x)=x^2/2$ and $h(x,\xi)=(1+\xi)x$, where $\xi$ is centered with
+variance $v>0$, ABC holds with $(A,B,C)=(0,1+v,0)$, but BV fails
+because the noise variance is $vx^2$. Thus ABC is strictly broader
+than BV.
+
+Neither ABC nor BV implies global similarity. Let
+$f(x)=x^2/2$ and $h(x,\xi)=x+\xi\sin(x^2)$ for a Rademacher $\xi$.
+The noise variance is at most one, so BV and ABC hold. But a finite
+similarity constant would make $\sin(x^2)$ globally Lipschitz, which
+is impossible since its derivative $2x\cos(x^2)$ is unbounded.
+
+Conversely, similarity need not imply even ABC. Let
+$f(x)=\log\cosh x$ and
+$h(x,\xi)=\tanh x+\xi x$, where $\xi$ is centered with variance
+$\delta^2>0$. The centered difference noise is $\xi(x-y)$, so
+\eqref{eq:oracle-similarity} holds with equality. Yet BV fails
+because the pointwise noise variance is $\delta^2x^2$, and ABC
+would require a quadratic function of $x$ to be bounded by
+$2A\log\cosh x+B\tanh^2x+C=O(|x|)+O(1)$.
+These are comparisons of assumptions, not claims that either
+algorithm always performs better on the examples.
 
 \subsection{SGD Guarantees}
 \mbox{}\par
