@@ -2,6 +2,15 @@
 \section{TSGD versus SGD: When Does Each Shine?}
 \label{sec:sgd-tsgd-comparison}
 
+We compare SGD and TSGD on the same objective, from the same initial
+point, using a common unbiased pointwise oracle. This makes both
+gradient noise and its coupling across points explicit. We first
+compare assumptions and convergence bounds, then examine exact
+trajectories that favor each method, and finally account for oracle
+costs. Throughout, performance means the average expected squared
+norm of the true gradient; an accurate initial estimate for TSGD is
+an additional resource whose cost must be counted.
+
 \subsection{Comparing Assumptions}
 \label{subsec:comparing-assumptions}
 
@@ -70,14 +79,7 @@ under Assumptions~\ref{ass:smooth-objective}--\ref{ass:bounded-variance},
 with a stepsize $\eta$ held constant for $K$ iterations. In this
 subsection, $F_k$ and $G_k$ refer to the SGD iterates, and we write
 $\overline G_K^{\mathrm{SGD}}:=K^{-1}\sum_{k=0}^{K-1}G_k$.
-Smoothness and the unbiasedness of each fresh gradient give
-\begin{equation}
-\label{eq:sgd-basic-descent}
-F_{k+1}
-\leq F_k-\eta G_k
-     +\frac{L\eta^2}{2}\mathbb E[\|g_k\|^2].
-\end{equation}
-Under BV, $\mathbb E[\|g_k\|^2]\leq G_k+\sigma^2$, so
+Smoothness, unbiasedness, and BV give
 \[
 F_{k+1}\leq F_k-\eta\left(1-\frac{L\eta}{2}\right)G_k
                    +\frac{L\eta^2\sigma^2}{2}.
@@ -138,20 +140,453 @@ similarity $\delta$ and initialization error $E_0$. Their assumptions
 and oracle costs differ, so the rates alone do not establish
 universal dominance.
 
-\subsection{Noise Mechanisms}
-\mbox{}\par
+\subsection{Noise Mechanisms and Convergence Bounds}
+\label{subsec:noise-mechanisms}
+
+The same oracle noise $r(x,\xi)$ enters the two algorithms differently.
+SGD samples $r(x_k,\xi_{k+1})$ afresh at each step; TSGD transports
+its current estimate using the coupled difference
+$r(x_{k+1},\xi_{k+1})-r(x_k,\xi_{k+1})$. The former depends on the
+pointwise noise magnitude, while the latter depends on how the noise
+changes between the two endpoints. Fresh sampling can replace an
+inaccurate gradient estimate; pure transport retains its initial
+error and adds the subsequent difference errors.
+
+The powers of the stepsize in these two mechanisms require care.
+For SGD, the noise term in the one-step descent inequality is
+$L\eta^2\sigma^2/2$. Summing and dividing by the descent coefficient
+gives the contribution $L\eta\sigma^2/(2-L\eta)$ in
+\eqref{eq:sgd-bv-bound}. For TSGD, similarity instead bounds each
+\emph{increase in tracking-error variance} by
+\[
+E_{k+1}-E_k\leq\delta^2\eta^2M_k,
+\qquad
+E_k\leq E_0+\delta^2\eta^2\sum_{t<k}M_t.
+\]
+The factor $\eta^2$ controls a single transport increment; its error
+persists in later estimates. Comparing it directly with SGD's
+$O(\eta\sigma^2)$ term would therefore compare different quantities.
+The accumulated errors are already accounted for in the convergence
+bounds below.
+
+Suppose, for the moment, that both BV and $\delta$-similarity hold for
+the same oracle and that both algorithms start at the same $x_0$.
+Write $\overline G_K^{\mathrm{TSGD}}$ for TSGD's average squared
+gradient. The optimized bounds \eqref{eq:sgd-bv-optimized-bound} and
+\eqref{eq:tsgd-optimized-bound} give
+\[
+\begin{aligned}
+U_{\mathrm{SGD}}(K)
+&:=\frac{\Delta_0}{K}
+   \left(L+\sqrt{L^2+\frac{2KL\sigma^2}{\Delta_0}}\right),\\
+U_{\mathrm{TSGD}}(K)
+&:=\frac{\Delta_0}{K}
+   \left(L+\sqrt{L^2+4(K-1)\delta^2}\right)+E_0,
+\end{aligned}
+\]
+for $\Delta_0>0$. Subtracting them shows that TSGD's upper bound is
+strictly smaller precisely when
+\begin{equation}
+\label{eq:optimized-certificate-comparison}
+\boxed{E_0<\frac{\Delta_0}{K}
+\left[\sqrt{L^2+\frac{2KL\sigma^2}{\Delta_0}}
+      -\sqrt{L^2+4(K-1)\delta^2}\right].}
+\end{equation}
+With exact initialization, this reduces to
+\begin{equation}
+\label{eq:equal-horizon-comparison}
+2(K-1)\delta^2\Delta_0<KL\sigma^2.
+\end{equation}
+For fixed positive $\delta,\sigma,\Delta_0$ and initialization error
+$E_0=o(K^{-1/2})$, the leading terms favor the TSGD bound when
+$2\delta^2\Delta_0<L\sigma^2$. With a fixed $E_0>0$, however,
+the TSGD bound tends to $E_0$, whereas the tuned SGD bound tends to
+zero. These statements compare upper bounds at equal iteration
+counts; they do not establish an ordering of the actual errors.
+Section~\ref{subsec:fair-oracle-comparison} accounts for their
+different oracle costs.
+
+There is also a fixed-step contrast. If $\delta=0$, TSGD may use
+$\eta=1/L$ for every horizon and has the bound
+$\overline G_K^{\mathrm{TSGD}}\leq2L\Delta_0/K+E_0$, against
+$2L\Delta_0/K+\sigma^2$ for SGD by
+\eqref{eq:sgd-bv-fixed-step}. For $\delta>0$, the sufficient
+condition of Theorem~\ref{thm:tsgd-stationarity} instead makes its
+admissible step horizon-dependent; this does not assert that every
+fixed-step TSGD run must fail. The next two examples determine the
+actual trajectories and stationarity errors.
 
 \subsection{Additive Noise}
-\mbox{}\par
+\label{subsec:additive-noise-comparison}
+
+Consider the common scalar oracle
+\begin{equation}
+\label{eq:additive-comparison-oracle}
+f(x)=\frac{x^2}{2},\qquad
+h(x,\xi)=x+\xi,\qquad
+\mathbb P(\xi=1)=\mathbb P(\xi=-1)=\frac12,\qquad x_0=1.
+\end{equation}
+Here $L=1$, $\Delta_0=1/2$, and BV holds with $\sigma^2=1$.
+The noise is independent of $x$, so a shared-sample difference is
+exact: $h(x,\xi)-h(y,\xi)=x-y$, and $\delta=0$.
+
+For SGD with $\eta=1/L=1$, the update is
+$x_{k+1}=-\xi_{k+1}$. Hence $G_k^{\mathrm{SGD}}=1$ for every
+$k\geq0$, and
+\begin{equation}
+\label{eq:additive-sgd-fixed}
+\boxed{\overline G_K^{\mathrm{SGD}}=1.}
+\end{equation}
+The nonvanishing $\sigma^2$ term in \eqref{eq:sgd-bv-fixed-step}
+is therefore a genuine feature of this fixed-step run, not just an
+artifact of the bound.
+
+With the horizon-dependent step from \eqref{eq:sgd-bv-optimal-step},
+$\eta_K=2/(1+\sqrt{1+4K})$, set $r_K=1-\eta_K$. The SGD update is
+$x_{k+1}=r_Kx_k-\eta_K\xi_{k+1}$. Since the fresh
+$\xi_{k+1}$ is independent of $x_k$, centered, and has second
+moment one, expanding the square gives
+\[
+G_{k+1}^{\mathrm{SGD}}
+=\mathbb E[(r_Kx_k-\eta_K\xi_{k+1})^2]
+=r_K^2G_k^{\mathrm{SGD}}+\eta_K^2.
+\]
+Solving this recursion from $G_0^{\mathrm{SGD}}=1$ yields
+\[
+G_k^{\mathrm{SGD}}=r_K^{2k}
+  +\frac{\eta_K}{2-\eta_K}(1-r_K^{2k}).
+\]
+In particular, averaging the geometric terms gives
+\[
+\overline G_K^{\mathrm{SGD}}
+=\frac{\eta_K}{2-\eta_K}
+ +\left(1-\frac{\eta_K}{2-\eta_K}\right)
+  \frac{1-r_K^{2K}}{K(1-r_K^2)}.
+\]
+Since $\eta_K\sim K^{-1/2}$, we have
+$r_K^{2K}\leq e^{-2K\eta_K}\to0$. Moreover,
+$1-r_K^2=\eta_K(2-\eta_K)\sim2K^{-1/2}$ and
+$1-\eta_K/(2-\eta_K)\to1$. Thus each term on the right is
+asymptotic to $1/(2\sqrt K)$, and
+\begin{equation}
+\label{eq:additive-sgd-tuned}
+\boxed{\overline G_K^{\mathrm{SGD}}
+=\frac{1+o(1)}{\sqrt K}.}
+\end{equation}
+Thus tuning the step removes the fixed-step residual. The optimized
+BV bound is $(1+\sqrt{1+4K})/(2K)$ here, so both its $K^{-1/2}$
+rate and its leading constant are attained by this run.
+
+For TSGD, use the fixed step $\eta=1$ and allow arbitrary
+square-integrable $g_0=1+e_0$, with
+$E_0=\mathbb E[|e_0|^2]$. Exact transport gives
+$D_{k+1}=x_{k+1}-x_k=-g_k$, so $g_1=0$ and
+$x_k=-e_0$ for every $k\geq1$. Consequently,
+\begin{equation}
+\label{eq:additive-tsgd-exact}
+\boxed{\overline G_K^{\mathrm{TSGD}}
+=\frac1K+\left(1-\frac1K\right)E_0.}
+\end{equation}
+With exact initialization, TSGD reaches the minimizer after one
+step despite the additive oracle noise. With inexact initialization,
+its limiting stationarity error is $E_0$: cancellation during
+transport cannot repair the initial estimate. In this example,
+additive noise favors TSGD when initialization is sufficiently
+accurate, while horizon-tuned SGD eventually improves on any fixed
+$E_0>0$.
 
 \subsection{Multiplicative Noise}
-\mbox{}\par
+\label{subsec:multiplicative-noise-comparison}
 
-\subsection{Distinct Assumption Regimes}
-\mbox{}\par
+Now use the oracle
+\begin{equation}
+\label{eq:multiplicative-comparison-oracle}
+f(x)=\frac{x^2}{2},\qquad
+h(x,a)=a x,\qquad
+\mathbb P(a=0)=\mathbb P(a=2)=\frac12,\qquad x_0=1.
+\end{equation}
+Since $\mathbb E[a]=1$ and $\mathbb E[(a-1)^2]=1$, the oracle is
+unbiased, with $L=1$ and $r(x,a)=(a-1)x$. Since
+$\mathbb E[|r(x,a)|^2]=x^2$, no finite global BV constant exists.
+Nevertheless, coupled differences satisfy
+$\mathbb E[|r(x,a)-r(y,a)|^2]=|x-y|^2$, so $\delta=1$.
+The BV theorem of Section~\ref{subsec:sgd-guarantees} does not
+apply here; the following comparison uses exact dynamics.
 
-\subsection{A Fair Comparison}
-\mbox{}\par
+Give both algorithms the step $\eta=1/2$. For SGD,
+$x_{k+1}=(1-a_{k+1}/2)x_k$: each sample either leaves the iterate
+unchanged or sends it to the minimizer, where it remains. Thus
+\begin{equation}
+\label{eq:multiplicative-sgd-exact}
+\boxed{G_k^{\mathrm{SGD}}=2^{-k},\qquad
+\overline G_K^{\mathrm{SGD}}
+=\frac{2(1-2^{-K})}{K}.}
+\end{equation}
 
-\subsection{Takeaway}
-\mbox{}\par
+For TSGD, initialize exactly with $g_0=\nabla f(x_0)=1$.
+The shared-sample difference gives
+$g_{k+1}=(1-a_{k+1}/2)g_k$. Let
+$N:=\min\{n\geq1:a_n=2\}$, so $\mathbb P(N=n)=2^{-n}$.
+Before the first such sample, $g_k=1$; afterward it is zero.
+Therefore
+\[
+x_k=1-\frac12\min\{k,N\},\qquad
+x_\infty=1-\frac N2.
+\]
+Since $\mathbb E[N]=2$ and $\mathbb E[N^2]=6$,
+\begin{equation}
+\label{eq:multiplicative-tsgd-residual}
+\boxed{\lim_{k\to\infty}G_k^{\mathrm{TSGD}}
+=\mathbb E\!\left[\left(1-\frac N2\right)^2\right]
+=\frac12.}
+\end{equation}
+The estimator becomes zero almost surely in finite time, but the
+limiting true gradient is nonzero with probability $3/4$. In
+particular, $\overline G_K^{\mathrm{TSGD}}\to1/2$, whereas
+\eqref{eq:multiplicative-sgd-exact} decays as $K^{-1}$.
+
+For completeness, the horizon-dependent TSGD step
+\eqref{eq:tsgd-optimal-step} is
+$\eta_K^\star=2/(1+\sqrt{4K-3})$. Here $L=\delta=1$,
+$\Delta_0=1/2$, and $E_0=0$, so the optimized guarantee
+\eqref{eq:tsgd-optimized-bound} becomes
+\begin{equation}
+\label{eq:multiplicative-tsgd-tuned-bound}
+\overline G_K^{\mathrm{TSGD}}
+\leq\frac{1/2}{K}\left(1+\sqrt{1+4(K-1)}\right)
+=\frac{1+\sqrt{4K-3}}{2K}.
+\end{equation}
+The bound is asymptotically attained by the iterates themselves.
+\begin{lemma}[Asymptotic sharpness for tuned TSGD]
+\label{lem:multiplicative-tsgd-tuned-exact}
+For the oracle \eqref{eq:multiplicative-comparison-oracle}, with
+exact initialization and stepsize $\eta_K^\star$, the actual average
+stationarity satisfies
+\[
+\lim_{K\to\infty}\sqrt K\,
+\overline G_K^{\mathrm{TSGD}}=1.
+\]
+\end{lemma}
+The proof is given in Appendix~\ref{app:proof-multiplicative-tsgd-tuned}.
+For this prescribed choice of step, the TSGD bound therefore has the
+correct leading rate and constant. With its fixed step $1/2$, SGD
+has average stationarity error $\Theta(K^{-1})$, while TSGD with
+$\eta_K^\star$ has error $\Theta(K^{-1/2})$. This is a comparison
+of the stated runs, not a lower bound over all possible step
+schedules. Fresh SGD samples become exact at the minimizer, while
+transport can exhaust its estimator before reaching that minimizer.
+
+\subsection{Similarity without Bounded Variance}
+\label{subsec:similarity-without-bv}
+
+The oracle $f(x)=\log\cosh x$ and
+$h(x,\xi)=\tanh x+\xi x$ from
+Section~\ref{subsec:comparing-assumptions} illustrates the scope of
+the TSGD guarantee. Recall that $\mathbb E[\xi]=0$ and
+$\mathbb E[\xi^2]=\delta^2>0$. The objective is $1$-smooth with
+$f_{\inf}=0$, while the pointwise noise variance $\delta^2x^2$ is
+unbounded. Nevertheless, the coupled increment
+\[
+D_{k+1}=\tanh x_{k+1}-\tanh x_k
+        +\xi_{k+1}(x_{k+1}-x_k)
+\]
+satisfies the conditional similarity assumption with equality.
+For deterministic $x_0$ and arbitrary initialization of finite
+mean-square error, \eqref{eq:tsgd-optimized-bound} therefore gives
+\begin{equation}
+\label{eq:logcosh-tsgd-guarantee}
+\overline G_K^{\mathrm{TSGD}}
+\leq\frac{\log\cosh x_0}{K}
+       \left(1+\sqrt{1+4(K-1)\delta^2}\right)+E_0.
+\end{equation}
+With exact initialization, this tends to zero at rate
+$O(K^{-1/2})$, although no global BV constant is available.
+
+For comparison, SGD with a fixed $\eta>0$ has
+$x_{k+1}=x_k-\eta\tanh x_k-\eta\xi_{k+1}x_k$.
+Writing $V_k:=\mathbb E[x_k^2]$, conditional unbiasedness and
+$|\tanh x|\leq1$ give
+\[
+\begin{aligned}
+V_{k+1}
+&=\mathbb E[(x_k-\eta\tanh x_k)^2]+\eta^2\delta^2V_k\\
+&\geq(1+\eta^2\delta^2)V_k-2\eta\sqrt{V_k}.
+\end{aligned}
+\]
+If $|x_0|\geq4/(\eta\delta^2)$, induction yields
+$V_{k+1}\geq(1+\eta^2\delta^2/2)V_k$:
+$2\eta\sqrt{V_k}\leq(\eta^2\delta^2/2)V_k$ whenever
+$\sqrt{V_k}\geq4/(\eta\delta^2)$, and this growth preserves the
+condition. This is divergence of the \emph{iterate second moment}.
+It does not establish failure of stationarity, which here concerns
+$\mathbb E[\tanh^2 x_k]$. The example demonstrates a TSGD guarantee
+outside the global BV framework; failure of that assumption alone
+does not imply that SGD cannot converge.
+
+\subsection{Fixed Noise Magnitude, Variable Noise Variation}
+\label{subsec:fixed-variance-variable-similarity}
+
+The previous examples change the form of the noise. We now hold
+its pointwise variance fixed while varying its spatial correlation.
+For $L,\sigma>0$ and frequency $\omega\geq0$, consider
+\begin{equation}
+\label{eq:fixed-variance-oracle}
+f(x)=\frac L2x^2,\qquad
+h(x,\varphi)=Lx+\sqrt2\sigma\cos(\omega x+\varphi),
+\qquad \varphi\sim\operatorname{Unif}[0,2\pi).
+\end{equation}
+Each update uses a fresh phase; the two evaluations in a TSGD
+difference share that phase.
+
+\begin{lemma}[Fixed variance and variable similarity]
+\label{lem:fixed-variance-variable-similarity}
+The noise $r(x,\varphi)=\sqrt2\sigma\cos(\omega x+\varphi)$ is
+centered and satisfies, for every $x,y$,
+\begin{equation}
+\label{eq:phase-noise-moments}
+\mathbb E_{\varphi}[r(x,\varphi)^2]=\sigma^2,\qquad
+\mathbb E_{\varphi}[|r(x,\varphi)-r(y,\varphi)|^2]
+=4\sigma^2\sin^2\!\left(\frac{\omega(x-y)}2\right).
+\end{equation}
+Its smallest global similarity constant is $\delta=\sigma\omega$.
+\end{lemma}
+
+\begin{proof}
+A uniform phase makes the cosine have mean zero and second moment
+$1/2$. For the difference, use
+\[
+r(x,\varphi)-r(y,\varphi)
+=-2\sqrt2\sigma\sin\!\left(\frac{\omega(x+y)}2+\varphi\right)
+                 \sin\!\left(\frac{\omega(x-y)}2\right).
+\]
+Squaring and averaging gives \eqref{eq:phase-noise-moments}.
+The inequality $|\sin t|\leq|t|$ proves similarity with
+$\delta=\sigma\omega$; this value is minimal because
+\[
+\lim_{y\to x}
+\frac{4\sigma^2\sin^2(\omega(x-y)/2)}{(x-y)^2}
+=\sigma^2\omega^2.
+\]
+\end{proof}
+
+For SGD, the fresh noise is conditionally centered with variance
+$\sigma^2$ at every iterate. Since $\nabla f(x)=Lx$, its exact
+second-moment recursion is
+\begin{equation}
+\label{eq:phase-sgd-dynamics}
+G_{k+1}^{\mathrm{SGD}}
+=(1-L\eta)^2G_k^{\mathrm{SGD}}+L^2\eta^2\sigma^2.
+\end{equation}
+For a common $x_0$ and stepsize, every frequency gives the same
+sequence of expected squared gradient norms.
+
+For TSGD, the martingale identity
+\eqref{eq:transport-error-identity} instead gives
+\begin{equation}
+\label{eq:phase-tsgd-error}
+\begin{aligned}
+E_{k+1}-E_k
+&=4\sigma^2\mathbb E\!\left[
+\sin^2\!\left(\frac{\omega(x_{k+1}-x_k)}2\right)\right]\\
+&\leq\sigma^2\omega^2\eta^2M_k.
+\end{aligned}
+\end{equation}
+At $\omega=0$, the noise is additive and transport is exact.
+For positive frequencies, its error depends on both the frequency
+and the displacement. Thus identical pointwise variance and
+identical SGD second-moment dynamics coexist with similarity
+constants ranging from zero to arbitrarily large values.
+The sine factor also shows why a large global $\delta$ need not
+produce a large error on every step: the actual variation depends
+on where the endpoints lie. Increasing the frequency need not
+increase every realized transport error monotonically.
+
+\subsection{Oracle Costs and When to Transport}
+\label{subsec:fair-oracle-comparison}
+
+An advantage at equal iteration counts need not be an advantage at
+equal computational cost. In the shared point-oracle construction,
+a fresh SGD estimate costs one evaluation, whereas a transported
+difference costs two. Let $B_0$ be the number of point-oracle
+evaluations used to construct a particular $g_0$, with resulting
+error $E_0$. This notation imposes no batching or unbiasedness
+requirement on initialization.
+
+Counting $K$ iterate updates and omitting the unused final transport
+correction, the costs are $K$ for SGD and $B_0+2(K-1)$ for TSGD.
+An integer budget $N\geq\max\{1,B_0\}$ therefore allows
+\begin{equation}
+\label{eq:equal-budget-horizons}
+K_{\mathrm{SGD}}=N,\qquad
+K_{\mathrm{TSGD}}=1+\left\lfloor\frac{N-B_0}{2}\right\rfloor.
+\end{equation}
+Under the common BV and similarity assumptions, the corresponding
+comparison is between $U_{\mathrm{SGD}}(N)$ and
+$U_{\mathrm{TSGD}}(K_{\mathrm{TSGD}})$, with the actual $E_0$
+of the chosen initialization included in the latter.
+
+For example, suppose $\delta,\sigma,\Delta_0>0$ are fixed,
+$B_0=o(N)$, and $E_0=o(N^{-1/2})$. Then
+$K_{\mathrm{TSGD}}\sim N/2$, and
+\[
+U_{\mathrm{SGD}}(N)
+\sim\frac{\sqrt{2L\Delta_0\sigma^2}}{\sqrt N},\qquad
+U_{\mathrm{TSGD}}(K_{\mathrm{TSGD}})
+\sim\frac{2\sqrt2\delta\Delta_0}{\sqrt N}.
+\]
+The leading TSGD bound is smaller when
+$4\delta^2\Delta_0<L\sigma^2$, rather than the equal-iteration
+threshold $2\delta^2\Delta_0<L\sigma^2$ from
+Section~\ref{subsec:noise-mechanisms}. Initialization with fixed
+positive error does not meet these asymptotic conditions. If exact
+initialization is supplied, its cost must still be included in
+$B_0$. A direct increment oracle, or an implementation that evaluates
+both endpoints jointly, requires its own cost accounting.
+
+For $\Delta_0>0$ and an explicit accuracy target, let an independent
+uniform output index $R$ select one of the iterates and require
+$\mathbb E[\|\nabla f(x_R)\|^2]\leq\varepsilon^2$.
+Under BV, \eqref{eq:sgd-bv-optimized-bound} shows that an integer
+horizon satisfying
+\[
+K_{\mathrm{SGD}}\geq
+\max\left\{1,\frac{4L\Delta_0}{\varepsilon^2},
+              \frac{8L\Delta_0\sigma^2}{\varepsilon^4}\right\}
+\]
+is sufficient: each of the two terms in the simplified bound is at
+most $\varepsilon^2/2$. For TSGD, the sufficient horizon is given
+by \eqref{eq:tsgd-iteration-complexity}, provided
+$E_0\leq\varepsilon^2/3$.
+
+One possible way to obtain this initialization under the common BV
+assumption is to average $B_0$ independent samples at $x_0$.
+Then $E_0\leq\sigma^2/B_0$, so one may take
+$B_0=\max\{1,\lceil3\sigma^2/\varepsilon^2\rceil\}$, as in
+Section~\ref{subsec:tsgd-complexity}. The resulting sufficient
+point-oracle evaluation budgets have orders
+\begin{equation}
+\label{eq:comparison-oracle-complexities}
+\begin{aligned}
+N_{\mathrm{SGD}}(\varepsilon)
+&=O\!\left(1+\frac{L\Delta_0}{\varepsilon^2}
+             +\frac{L\Delta_0\sigma^2}{\varepsilon^4}\right),\\
+N_{\mathrm{TSGD}}(\varepsilon)
+&=O\!\left(1+\frac{\sigma^2}{\varepsilon^2}
+             +\frac{L\Delta_0}{\varepsilon^2}
+             +\frac{\delta^2\Delta_0^2}{\varepsilon^4}\right).
+\end{aligned}
+\end{equation}
+These are upper bounds obtained from the two convergence guarantees,
+not oracle lower bounds. The initialization term in the TSGD budget
+belongs to this particular construction of $g_0$; another source of
+initial gradient information can change it.
+
+The comparison depends on noise magnitude, noise variation, and
+the cost of initialization. SGD benefits when fresh gradients are
+accurate, especially when their noise vanishes near a minimizer.
+TSGD benefits when a sufficiently accurate initial estimate can be
+obtained and subsequent gradient differences have little noise.
+The examples exhibit both possibilities, so neither method
+universally dominates. Their complementary mechanisms motivate
+the combinations of refreshing and transporting studied in
+Section~6.
