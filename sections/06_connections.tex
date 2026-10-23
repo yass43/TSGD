@@ -265,3 +265,66 @@ schedule, mixing weights, sampling, and iterate update. TSGD is therefore
 a fundamental building block of modern stochastic optimization: its
 recursion remains identifiable even when it is embedded in a more
 elaborate algorithm.
+
+\subsection{Why Combine Fundamental Estimators?}
+\label{subsec:why-combine-estimators}
+
+SGD, momentum SGD (MSGD), and TSGD embody three fundamental estimation
+mechanisms: estimating gradients afresh, averaging past gradients,
+and transporting an estimate through gradient changes. Each has a
+characteristic limitation: SGD is exposed to pointwise noise, MSGD
+can lag behind the changing gradient, and TSGD preserves initialization
+errors and accumulates transport errors. Modern optimizers combine
+these fundamental estimators through weighted averages, as in
+MVR/STORM and MARS, or by alternating between fresh estimation and
+transport, as in SARAH, SPIDER, and PAGE. These combinations have
+three motivations.
+
+\emph{Computational efficiency.} When individual stochastic gradients
+are noisy, obtaining an accurate fresh estimate may require a large
+batch. If their differences are much less noisy, a small batch can
+suffice to estimate the gradient change accurately. Although each
+coupled difference requires two gradient evaluations, the smaller
+batch can still make a transport step substantially cheaper. SARAH,
+SPIDER, and PAGE exploit this by reusing an accurate estimate through
+many small-batch transport steps before recomputing it. This saves
+work compared with forming a large-batch gradient at every iteration;
+refreshing more often limits error accumulation but reduces that saving.
+
+\emph{Complementary mechanisms.} Momentum averages noisy gradients,
+but the information it retains comes from points the iterate has
+already left. Transport updates this inherited information to account
+for the change in the true gradient. It can therefore reduce momentum's
+tracking lag while preserving the benefit of averaging across iterations.
+Fresh gradients provide absolute information that pure transport cannot
+recover, damping both initialization errors and accumulated transport
+errors. Their weight controls the strength of this correction and the
+amount of fresh noise introduced. MVR, STORM, and MARS combine these
+roles through their mixing weights and transport corrections. The
+mechanisms are complementary even within a fixed noise regime: each
+addresses a limitation of the others.
+
+\emph{Changing regimes.} Even for a fixed stochastic oracle, the
+relative accuracy of fresh and transported estimates need not remain
+constant during optimization. Under
+Assumption~\ref{ass:centered-similarity}, the variance of a new
+transport error is bounded by
+$\delta^2\|x_{k+1}-x_k\|^2$ conditionally on the current history.
+Shorter steps therefore tighten this bound, although they do not
+remove errors already accumulated in the estimate.
+Section~\ref{subsec:fixed-variance-variable-similarity} illustrates
+how transport noise varies with the displacement even when pointwise
+noise variance is constant. Conversely, fresh gradients may become
+more reliable: in Section~\ref{subsec:multiplicative-noise-comparison},
+their noise vanishes near the minimizer, while pure transport can
+retain a nonzero tracking error. Thus the preferable balance can
+change as the iterates move, steps shrink, and estimation errors
+accumulate. Combining mechanisms gives an optimizer flexibility to
+respond to these changes through its refresh schedule or mixing weights.
+
+Mixing weights and refresh frequency determine how much an optimizer
+relies on each mechanism. Fixed choices provide a compromise, while
+adapting them during optimization can help respond to changing
+conditions. Choosing this balance remains important: combining
+estimators does not automatically improve convergence, and a poor
+choice can perform worse than using one estimator alone.
