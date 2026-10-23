@@ -1,0 +1,138 @@
+% !TEX root = ../main.tex
+\section{Oracle Complexity and Additional Algorithmic Details}
+\label{app:oracle-complexity}
+
+\subsection{Initialization and Accuracy Targets}
+\label{app:initialization-cost}
+
+Suppose an unbiased oracle at $x_0$ has variance at most $\sigma_0^2$.
+With $B_0$ independent samples, independent also of subsequent
+transport samples, set
+\[
+g_0=\frac1{B_0}\sum_{i=1}^{B_0}h(x_0,\xi_i^{(0)}).
+\]
+Independence and centering cancel the cross terms, giving
+\[
+E_0=\mathbb E[\|g_0-\nabla f(x_0)\|^2]
+\leq\frac{\sigma_0^2}{B_0}.
+\]
+Thus
+$B_0\geq\max\{1,\lceil3\sigma_0^2/\varepsilon^2\rceil\}$
+ensures $E_0\leq\varepsilon^2/3$, as required by
+Corollary~\ref{cor:tsgd-iteration-complexity}. Only the variance at
+$x_0$ is needed for this construction. The main theorem itself
+requires neither unbiased initialization nor a pointwise oracle.
+
+Count $K$ iterate updates. Single-sample SGD uses $K$ pointwise
+gradient evaluations, whereas the shared-sample TSGD construction
+uses at most $B_0+2(K-1)$. Its final correction $D_K$ is unused:
+$g_{K-1}$ suffices to compute $x_K$, and the output is selected from
+$x_0,\ldots,x_{K-1}$. Under the common BV assumption, one can take
+$\sigma_0^2\leq\sigma^2$. Combining the batch size above with
+\eqref{eq:tsgd-iteration-complexity} and
+\eqref{eq:sgd-iteration-complexity} gives sufficient evaluation
+budgets of order
+\begin{equation}
+\label{eq:comparison-oracle-complexities}
+\begin{aligned}
+N_{\mathrm{SGD}}(\varepsilon)
+ &=O\!\left(1+\frac{L\Delta_0}{\varepsilon^2}
+              +\frac{L\Delta_0\sigma^2}{\varepsilon^4}\right),\\
+N_{\mathrm{TSGD}}(\varepsilon)
+ &=O\!\left(1+\frac{\sigma^2}{\varepsilon^2}
+              +\frac{L\Delta_0}{\varepsilon^2}
+              +\frac{\delta^2\Delta_0^2}{\varepsilon^4}\right).
+\end{aligned}
+\end{equation}
+These are upper bounds for the stated implementations, not oracle
+lower bounds. The initialization term depends on this choice of
+$g_0$ and can change when other initial gradient information is
+available.
+
+\subsection{Comparing Bounds at Equal Iteration Counts}
+\label{subsec:noise-mechanisms}
+
+Suppose both BV and global $\delta$-similarity hold for the same
+oracle, both methods start at the same deterministic $x_0$, and
+$\Delta_0>0$. Define the exact optimized bounds
+\[
+\begin{aligned}
+U_{\mathrm{SGD}}(K)
+ &:=\frac{\Delta_0}{K}
+   \left(L+\sqrt{L^2+\frac{2KL\sigma^2}{\Delta_0}}\right),\\
+U_{\mathrm{TSGD}}(K)
+ &:=\frac{\Delta_0}{K}
+   \left(L+\sqrt{L^2+4(K-1)\delta^2}\right)+E_0.
+\end{aligned}
+\]
+Subtracting shows that $U_{\mathrm{TSGD}}(K)<U_{\mathrm{SGD}}(K)$
+holds exactly when
+\begin{equation}
+\label{eq:optimized-certificate-comparison}
+E_0<\frac{\Delta_0}{K}
+\left[\sqrt{L^2+\frac{2KL\sigma^2}{\Delta_0}}
+      -\sqrt{L^2+4(K-1)\delta^2}\right].
+\end{equation}
+With exact initialization this reduces to
+\begin{equation}
+\label{eq:equal-horizon-comparison}
+2(K-1)\delta^2\Delta_0<KL\sigma^2.
+\end{equation}
+For fixed positive $\delta,\sigma,\Delta_0$ and
+$E_0=o(K^{-1/2})$, the leading terms favor the TSGD bound when
+$2\delta^2\Delta_0<L\sigma^2$. In contrast, a fixed positive
+$E_0$ remains in the TSGD bound while the tuned SGD bound tends to
+zero. These inequalities compare upper bounds; they do not imply
+the same ordering of actual stationarity errors.
+
+The powers of the stepsize in intermediate calculations should not
+be compared directly. For SGD, the one-step descent penalty is
+$L\eta^2\sigma^2/2$; summing and dividing by the descent coefficient
+gives $L\eta\sigma^2/(2-L\eta)$ in \eqref{eq:sgd-bv-bound}.
+For TSGD, $\delta^2\eta^2M_k$ instead bounds the increase
+$E_{k+1}-E_k$ in tracking error. This increment persists in subsequent
+estimates and receives the weight $K-1-k$ in
+\eqref{eq:weighted-error-accumulation}. The optimized bounds account
+for this accumulation.
+
+There is also a fixed-step comparison when $\delta=0$: TSGD may use
+$\eta=1/L$ for all horizons, obtaining
+$2L\Delta_0/K+E_0$, while SGD's corresponding bound is
+$2L\Delta_0/K+\sigma^2$. For $\delta>0$, the sufficient condition
+of Theorem~\ref{thm:tsgd-stationarity} makes the prescribed TSGD step
+horizon dependent. This does not imply that every fixed-step TSGD
+run must fail.
+
+\subsection{Comparing Bounds at Equal Oracle Budgets}
+\label{subsec:fair-oracle-comparison}
+
+Let $B_0$ denote the cost of a chosen initialization with error $E_0$,
+without imposing a batching or unbiasedness requirement. With the
+cost convention above, an integer budget
+$N\geq\max\{1,B_0\}$ allows
+\begin{equation}
+\label{eq:equal-budget-horizons}
+K_{\mathrm{SGD}}=N,\qquad
+K_{\mathrm{TSGD}}=1+\left\lfloor\frac{N-B_0}{2}\right\rfloor.
+\end{equation}
+The bounds to compare are therefore $U_{\mathrm{SGD}}(N)$ and
+$U_{\mathrm{TSGD}}(K_{\mathrm{TSGD}})$, including the error of the
+chosen initialization in the latter.
+
+For fixed positive $\delta,\sigma,\Delta_0$, suppose
+$B_0=o(N)$ and $E_0=o(N^{-1/2})$. Then
+$K_{\mathrm{TSGD}}\sim N/2$ and
+\[
+U_{\mathrm{SGD}}(N)
+\sim\frac{\sqrt{2L\Delta_0\sigma^2}}{\sqrt N},
+\qquad
+U_{\mathrm{TSGD}}(K_{\mathrm{TSGD}})
+\sim\frac{2\sqrt2\delta\Delta_0}{\sqrt N}.
+\]
+The leading TSGD bound is smaller when
+$4\delta^2\Delta_0<L\sigma^2$, compared with the equal-iteration
+threshold $2\delta^2\Delta_0<L\sigma^2$. A fixed positive
+initialization error does not satisfy these asymptotic conditions.
+Exact initialization must also have its cost counted in $B_0$.
+Direct increment oracles and implementations that evaluate endpoints
+jointly require their own cost accounting.

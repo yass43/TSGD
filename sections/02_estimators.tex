@@ -1,0 +1,115 @@
+% !TEX root = ../main.tex
+\section{Three Fundamental Estimators and Similarity}
+\label{sec:algorithms-and-errors}
+
+\subsection{SGD, MSGD, and TSGD}
+\label{subsec:algorithms-and-assumptions}
+
+\begin{assumption}[Smooth, lower-bounded objective]
+\label{ass:smooth-objective}
+The function $f:\mathbb R^d\to\mathbb R$ has an $L$-Lipschitz gradient,
+with $L>0$, and $f_{\inf}:=\inf_x f(x)>-\infty$.
+\end{assumption}
+\begin{assumption}[Unbiased stochastic gradients]
+\label{ass:unbiased-oracle}
+The oracle satisfies $\mathbb E_{\xi}[h(x,\xi)]=\nabla f(x)$ for every $x$.
+Each new sample is independent of the preceding history.
+\end{assumption}
+
+All three methods use positive deterministic stepsizes $\eta_k$ and
+the same iterate update, starting from a deterministic $x_0$:
+\begin{equation}
+\label{eq:tsgd-iterate}
+x_{k+1}=x_k-\eta_k g_k.
+\end{equation}
+They differ in how they construct the next estimate:
+\begin{align}
+\mathrm{SGD}:\quad g_{k+1}
+  &=h(x_{k+1},\xi_{k+1}), \label{eq:sgd-estimate}\\
+\mathrm{MSGD}:\quad g_{k+1}
+  &=(1-\beta_k)g_k+\beta_k h(x_{k+1},\xi_{k+1}),
+  \quad 0<\beta_k\leq1, \label{eq:msgd-estimate}\\
+\mathrm{TSGD}:\quad g_{k+1}
+  &=g_k+D_{k+1}. \label{eq:tsgd-estimate}
+\end{align}
+In the standard pointwise-oracle construction,
+\begin{equation}
+\label{eq:shared-sample-increment}
+D_{k+1}=h(x_{k+1},\xi_{k+1})-h(x_k,\xi_{k+1}).
+\end{equation}
+Both evaluations use the \emph{same fresh sample}. SGD replaces its
+estimate, MSGD averages past and current information, and TSGD updates
+past information to account for a gradient change. Averaging can reduce
+noise but retain gradients from earlier points; transport keeps that
+information current but inherits its estimation error. SGD initializes
+with a fresh gradient; TSGD permits any $g_0$ with finite mean-square
+error, including a biased estimate.
+
+\subsection{Understanding Similarity}
+\label{subsec:understanding-similarity}
+
+Write $r(x,\xi)=h(x,\xi)-\nabla f(x)$ for the gradient noise.
+\begin{assumption}[Bounded variance (BV)]
+\label{ass:bounded-variance}
+For some $\sigma\geq0$,
+\begin{equation}
+\label{eq:bounded-variance}
+\mathbb E_{\xi}[\|r(x,\xi)\|^2]\leq\sigma^2
+\qquad\text{for all }x.
+\end{equation}
+\end{assumption}
+Transport instead benefits from \emph{centered similarity}:
+\begin{equation}
+\label{eq:oracle-similarity}
+\mathbb E_{\xi}[\|r(x,\xi)-r(y,\xi)\|^2]
+\leq\delta^2\|x-y\|^2
+\qquad\text{for all }x,y.
+\end{equation}
+Here $\sigma$ bounds the magnitude of individual gradient errors, whereas
+$\delta$ measures their variation under shared sampling. A small $\delta$
+means that stochastic gradient differences closely match deterministic
+gradient differences; it does not require the gradients themselves, or
+their changes, to be small. Similarity does not require a finite sum.
+
+For an illustration, let $f=n^{-1}\sum_i f_i$ with
+$f_i(x)=\tfrac12x^\top A_i x+b_i^\top x+c_i$ and symmetric $A_i$.
+Uniformly sampling $i$, and writing $\bar A=n^{-1}\sum_i A_i$, gives
+\begin{equation}
+\label{eq:quadratic-difference-noise}
+[\nabla f_i(x)-\nabla f_i(y)]-[\nabla f(x)-\nabla f(y)]
+=(A_i-\bar A)(x-y).
+\end{equation}
+The linear terms cancel. Components can therefore have very different
+gradients but nearly identical gradient changes. Identical Hessians give
+exact transport even with arbitrarily large additive gradient noise.
+Hessian heterogeneity controls $\delta$, whereas $L$ concerns the average
+Hessian; neither must be smaller than the other
+(Appendix~\ref{app:noise-assumptions}).
+
+\subsection{Two Fundamental Sources of TSGD Error}
+\label{subsec:martingale-interpretation}
+
+Define $e_k=g_k-\nabla f(x_k)$, $E_k=\mathbb E[\|e_k\|^2]$, and
+$d_{k+1}=D_{k+1}-[\nabla f(x_{k+1})-\nabla f(x_k)]$.
+The transport update gives
+\begin{equation}
+\label{eq:estimation-error-recursion}
+\boxed{e_{k+1}=e_k+d_{k+1}.}
+\end{equation}
+For conditionally unbiased increments, the new error has zero conditional
+mean and is orthogonal in expectation to previous errors. Consequently,
+\begin{equation}
+\label{eq:transport-error-identity}
+E_k=E_0+\sum_{t=0}^{k-1}\mathbb E[\|d_{t+1}\|^2].
+\end{equation}
+Initialization error persists, and each transport error adds to it.
+Similarity bounds each contribution by the squared displacement, yielding
+\begin{equation}
+\label{eq:transport-error-growth}
+E_k\leq E_0+\delta^2\sum_{t=0}^{k-1}
+\eta_t^2\mathbb E[\|g_t\|^2].
+\end{equation}
+This explains both the opportunity and the difficulty: accurate changes
+preserve useful information, but even small errors can accumulate.
+Section~\ref{sec:tsgd-convergence} states the conditional assumptions
+directly on $D_{k+1}$, allowing transport beyond pointwise gradient oracles.

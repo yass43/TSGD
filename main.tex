@@ -14,19 +14,42 @@
 \maketitle
 
 \begin{abstract}
+Stochastic gradient descent estimates gradients afresh. Transported SGD
+(TSGD) instead estimates gradient changes and uses them to transport an
+initial estimate along the optimization trajectory. This known recursion
+is a fundamental estimation mechanism, alongside fresh estimation and
+momentum averaging, and is already embedded in many modern optimizers.
+Its advantage arises when stochastic gradient differences are accurate
+even though individual gradients are noisy. We explain this distinction
+through centered similarity, which measures noise variation rather than
+pointwise noise magnitude. Exact examples and a controlled numerical
+experiment reveal regimes favoring transport or fresh gradients. A
+finite-horizon convergence guarantee separates optimization, transport,
+and initialization contributions, while exact quadratic dynamics show
+how inherited and accumulated errors can prevent stationarity. These
+results provide a unified view of transport and its combination with
+refreshing and averaging in modern stochastic optimization.
 \end{abstract}
 
 \input{sections/01_introduction}
-\input{sections/02_sgd_and_tsgd}
-\input{sections/03_convergence}
-\input{sections/04_error_sources}
-\input{sections/05_comparison}
-\input{sections/06_connections}
+\input{sections/02_estimators}
+\input{sections/03_regimes}
+\input{sections/04_theory}
+\input{sections/05_modern_optimizers}
+\input{sections/06_conclusion}
+\label{main-text-end}
 
+\clearpage
 \bibliographystyle{plainnat}
 \bibliography{references}
 
+\clearpage
 \appendix
-\input{appendix/A_generality}
+\input{appendix/A_convergence}
+\input{appendix/B_quadratic_dynamics}
+\input{appendix/C_noise_assumptions}
+\input{appendix/D_examples}
+\input{appendix/E_oracle_complexity}
+\input{appendix/E_algorithmic_details}
 
 \end{document}

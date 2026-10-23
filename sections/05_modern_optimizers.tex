@@ -1,0 +1,125 @@
+% !TEX root = ../main.tex
+\section{TSGD as a Building Block of Modern Optimizers}
+\label{sec:connections}
+
+\subsection{Transport Is Already Everywhere}
+\label{subsec:refreshing-and-transporting}
+
+Many modern stochastic optimizers combine fresh gradients with
+transported estimates. Their common building blocks are the three
+operations in Figure~\ref{fig:fundamental-estimators}: fresh estimation,
+averaging, and transport. Write $H_{k+1}$ for a fresh unbiased estimate of
+$\nabla f(x_{k+1})$, $D_{k+1}$ for an estimate of its change from $x_k$,
+and $g_k+D_{k+1}$ for the transported estimate. A stochastic gradient
+difference uses the same fresh sample or minibatch at both endpoints.
+Table~\ref{tab:transport-building-blocks} summarizes the resulting
+estimator relationships. Here $\alpha,\beta\in[0,1]$ weight fresh
+estimates, and $\gamma$ scales the MARS transport correction.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}
+                  >{\raggedright\arraybackslash}p{0.43\textwidth}
+                  >{\raggedright\arraybackslash}p{0.31\textwidth}@{}}
+\toprule
+Method & Estimator at iteration $k+1$ & Role of transport \\
+\midrule
+SARAH / SPIDER
+& $H_{k+1}$ or $g_k+D_{k+1}$
+& Transport between periodic refreshes. \\
+Geom-SARAH
+& $H_{k+1}$ or $g_k+D_{k+1}$
+& Transport for a geometric number of steps. \\
+PAGE
+& $H_{k+1}$ or $g_k+D_{k+1}$
+& Refresh with probability $p$. \\
+MARINA
+& $\nabla f(x_{k+1})$ or $g_k+D_{k+1}^{\mathcal Q}$
+& Communicate compressed gradient changes. \\
+STORM / MVR
+& $\begin{aligned}[t]
+   &(1-\alpha)(g_k+D_{k+1})\\
+   &\quad+\alpha H_{k+1}
+   \end{aligned}$
+& Average fresh and transported estimates. \\
+MARS (unclipped)
+& $\begin{aligned}[t]
+   &(1-\beta)(g_k+\gamma D_{k+1})\\
+   &\quad+\beta H_{k+1}
+   \end{aligned}$
+& Scale the transport correction within momentum. \\
+\bottomrule
+\end{tabular}
+\caption{Transport in modern optimizers. Rows with two alternatives
+select one branch according to a restart or refresh rule; the last two
+rows form weighted combinations. $D_{k+1}^{\mathcal Q}$ denotes an
+unbiased compressed increment. The identities describe estimators;
+batch sizes, stepsizes, and iterate updates belong to each algorithm.}
+\label{tab:transport-building-blocks}
+\end{table}
+
+SARAH and SPIDER transport an estimate between full-gradient or
+large-batch recomputations
+\citep{nguyen2017sarah,nguyen2017sarah_nonconvex,fang2018spider}.
+Inexact SARAH allows batch initialization \citep{nguyen2021inexact},
+while Geom-SARAH randomizes the phase length
+\citep{horvath2022adaptivity}. PAGE refreshes probabilistically
+\citep{li2021page}; MARINA combines exact refreshes with compressed
+gradient differences \citep{gorbunov2021marina}.
+
+MVR/STORM instead averages fresh and transported estimates at each
+iteration \citep{cutkosky2019momentum}. The unclipped MARS estimator
+\citep{yuan2025mars} includes MSGD at $\gamma=0$ and MVR at $\gamma=1$.
+These identities concern the stated sampling: cached gradients,
+clipping, and preconditioning require separate treatment. Sampling
+also affects the noise covariance, as emphasized by the VENUS
+construction \citep{venus2026draft}.
+Appendix~\ref{app:algorithmic-details} gives the precise identities,
+error recursions, and special cases.
+
+\subsection{Why Combine Fundamental Estimators?}
+\label{subsec:why-combine-estimators}
+
+SGD, MSGD, and TSGD use fresh information, averaging, and transport,
+respectively. Modern optimizers combine them through weighted averages
+or alternate between fresh estimation and transport. Three motivations
+explain why these combinations can be useful.
+
+\emph{Computational efficiency.} An accurate absolute gradient may
+require a large batch, whereas a small batch can suffice for an accurate
+gradient change. Even with two evaluations per sample, transport can
+then cost much less. SARAH, SPIDER, and PAGE preserve information from
+an expensive gradient estimate through many cheaper transport steps.
+Refreshing more often limits accumulated error but reduces this saving.
+
+\emph{Complementary strengths.} Momentum averages noisy information
+from previous iterations, but those gradients were evaluated at points
+the iterate has already left. Transport accounts for the change in
+the true gradient, reducing tracking lag while retaining the benefit
+of averaging. Fresh gradients supply absolute information that pure
+transport cannot recover: mixing them in damps initialization and
+accumulated transport errors, while introducing new pointwise noise.
+MVR, STORM, and MARS balance these roles through their mixing weights
+and transport corrections. This complementarity matters even when
+the noise regime remains fixed.
+
+\emph{Changing regimes.} The relative accuracy of fresh and transported
+estimates can change during a single run. Similarity bounds each new
+transport error in proportion to the squared displacement, so shorter
+steps tighten this bound without removing previously accumulated error.
+Section~\ref{subsec:fixed-variance-variable-similarity} illustrates
+this displacement dependence even when pointwise noise variance stays
+constant. Fresh gradients may also become more reliable: in
+Section~\ref{subsec:multiplicative-noise-comparison}, their noise
+vanishes near the minimizer, while pure transport can retain a nonzero
+tracking error. Thus the balance can change as iterates move, steps
+shrink, and errors accumulate.
+
+Mixing weights and refresh frequency determine how much an optimizer
+relies on each mechanism. Fixed choices provide a compromise, while
+adapting them can respond to changing conditions. The balance matters:
+combining estimators does not automatically improve convergence, and
+a poor choice can perform worse than using one estimator alone.

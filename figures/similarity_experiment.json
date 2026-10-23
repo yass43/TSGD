@@ -1,0 +1,112 @@
+{
+  "seed": 20261023,
+  "runs_per_curve": 100000,
+  "evaluation_budget": 200,
+  "L": 1,
+  "sigma": 1,
+  "x0": 1,
+  "eta": 0.1,
+  "initialization": "Two antithetic phases phi and phi+pi; cost two for every method",
+  "sampling": "Independent uniform fresh phases; one phase shared across TSGD endpoints",
+  "cost": "First update costs 2; subsequent SGD/TSGD updates cost 1/2",
+  "error_bands": "Monte Carlo mean plus/minus two standard errors, pointwise",
+  "numpy_version": "2.2.6",
+  "matplotlib_version": "3.10.5",
+  "results": [
+    {
+      "method": "SGD",
+      "omega": 1.0,
+      "iterations": 199,
+      "evaluations": 200,
+      "mean_gradient_squared": 0.05279106432577886,
+      "standard_error": 0.00022615706112056423,
+      "squared_gradient_quantiles": {
+        "0.5": 0.024749399934864833,
+        "0.9": 0.14394097038171813,
+        "0.99": 0.3318313602455236,
+        "0.999": 0.501899215283437
+      },
+      "max_squared_gradient": 0.8285001162677996,
+      "top_0.1_percent_share_of_sum": 0.010948036585814823,
+      "max_initialization_error": 8.881784197001252e-16,
+      "max_sgd_error_in_standard_errors": 3.3496357248440205,
+      "max_exact_transport_relative_error": 0.0
+    },
+    {
+      "method": "TSGD",
+      "omega": 0.0,
+      "iterations": 100,
+      "evaluations": 200,
+      "mean_gradient_squared": 7.05507910866199e-10,
+      "standard_error": 1.235230980380467e-22,
+      "squared_gradient_quantiles": {
+        "0.5": 7.055079108661136e-10,
+        "0.9": 7.05507910916241e-10,
+        "0.99": 7.05507910957483e-10,
+        "0.999": 7.055079109862551e-10
+      },
+      "max_squared_gradient": 7.055079110298613e-10,
+      "top_0.1_percent_share_of_sum": 0.0010000000001849523,
+      "max_initialization_error": 8.881784197001252e-16,
+      "max_sgd_error_in_standard_errors": 0.0,
+      "max_exact_transport_relative_error": 9.387017037311276e-13
+    },
+    {
+      "method": "TSGD",
+      "omega": 0.5,
+      "iterations": 100,
+      "evaluations": 200,
+      "mean_gradient_squared": 0.01340893905095548,
+      "standard_error": 6.334677503931329e-05,
+      "squared_gradient_quantiles": {
+        "0.5": 0.006148097411592255,
+        "0.9": 0.03507203888997254,
+        "0.99": 0.09495532800808135,
+        "0.999": 0.1778521879901872
+      },
+      "max_squared_gradient": 0.4226478907601289,
+      "top_0.1_percent_share_of_sum": 0.01660971418386384,
+      "max_initialization_error": 8.881784197001252e-16,
+      "max_sgd_error_in_standard_errors": 0.0,
+      "max_exact_transport_relative_error": 0.0
+    },
+    {
+      "method": "TSGD",
+      "omega": 1.0,
+      "iterations": 100,
+      "evaluations": 200,
+      "mean_gradient_squared": 0.05548493617422304,
+      "standard_error": 0.0003309976463672973,
+      "squared_gradient_quantiles": {
+        "0.5": 0.024108310480319955,
+        "0.9": 0.1298897426688354,
+        "0.99": 0.49667590339849005,
+        "0.999": 1.1849250669018976
+      },
+      "max_squared_gradient": 4.56433095291091,
+      "top_0.1_percent_share_of_sum": 0.02835218810691601,
+      "max_initialization_error": 8.881784197001252e-16,
+      "max_sgd_error_in_standard_errors": 0.0,
+      "max_exact_transport_relative_error": 0.0
+    },
+    {
+      "method": "TSGD",
+      "omega": 2.0,
+      "iterations": 100,
+      "evaluations": 200,
+      "mean_gradient_squared": 0.2596104284472326,
+      "standard_error": 0.0030504004336809726,
+      "squared_gradient_quantiles": {
+        "0.5": 0.08877995843964137,
+        "0.9": 0.40437038798298164,
+        "0.99": 3.3826878695302085,
+        "0.999": 11.554251761567905
+      },
+      "max_squared_gradient": 77.1788755559248,
+      "top_0.1_percent_share_of_sum": 0.07722801528013779,
+      "max_initialization_error": 8.881784197001252e-16,
+      "max_sgd_error_in_standard_errors": 0.0,
+      "max_exact_transport_relative_error": 0.0
+    }
+  ]
+}

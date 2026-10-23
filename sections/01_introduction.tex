@@ -1,81 +1,76 @@
 % !TEX root = ../main.tex
 \section{Introduction}
+\label{sec:introduction}
 
-Stochastic gradient descent (SGD) is a cornerstone of stochastic optimization
-and a workhorse of modern machine learning
-\citep{bottou2018optimization}. At each iteration, it replaces the exact
-gradient with a fresh stochastic estimate. Its simplicity and scalability
-have made it a standard method across machine learning. For smooth
-nonconvex objectives, the classical analysis gives an $O(K^{-1/2})$ guarantee
-for the average squared gradient norm under unbiasedness and bounded
-variance, with a suitably chosen stepsize
+Stochastic gradient descent (SGD) is a cornerstone of stochastic
+optimization and a workhorse of modern machine learning
+\citep{bottou2018optimization}. It replaces the exact gradient with a
+fresh stochastic estimate, making optimization possible when evaluating
+the full gradient is expensive or infeasible. Its simplicity and
+scalability are supported by a substantial convergence theory, including
+guarantees for smooth nonconvex objectives
 \citep{ghadimi2013stochastic}.
 
-The bounded-variance assumption controls the mean-square magnitude of the
-error in an individual stochastic gradient, uniformly over the points under
-consideration. This uniform bound must cover the noisiest point in the region
-and can therefore be much larger than the noise typically encountered along
-the optimization trajectory. Classical SGD guarantees are consequently
-sensitive to the magnitude of pointwise gradient noise.
+Fresh estimation is one fundamental way to construct a gradient estimate.
+Momentum SGD (MSGD) adds another: it averages stochastic-gradient
+information across iterations, reducing noise while potentially lagging
+behind a changing gradient. A third mechanism is equally natural:
+estimate how the gradient changes, and add that change to an existing
+estimate. We call this mechanism \emph{Transported SGD (TSGD)}.
+SGD estimates gradients afresh; TSGD estimates gradient changes and
+transports an initial estimate along the optimization trajectory.
+Figure~\ref{fig:fundamental-estimators} places these three operations
+side by side.
 
-But magnitude is not the only relevant feature of noise. In many problems,
-the same data sample produces correlated stochastic gradients at nearby
-points. Their difference can be accurate even when each gradient is noisy,
-because noise shared across the two evaluations cancels. Plain SGD does not
-explicitly exploit this coupling: each update uses a fresh estimate of the
-absolute gradient. This suggests a complementary strategy---estimate how the
-gradient changes, and use that change to carry an existing estimate along the
-optimization path.
+The motivation for transport is that estimating a change can be much
+easier than estimating an absolute quantity. Two stochastic gradients
+evaluated with the same sample can share substantial noise. Subtracting
+them cancels the shared component, so their difference can accurately
+estimate the true gradient change even when each gradient is highly
+noisy. Transport exploits this information directly. For example,
+additive noise cancels exactly from a shared-sample difference;
+with an exact initial estimate, TSGD then follows the deterministic
+gradient-descent trajectory, regardless of the additive noise variance.
 
-Transported SGD (TSGD) isolates this idea in its simplest form. Starting from
-an initial gradient estimate, it estimates the gradient change between
-consecutive iterates and adds that change to its current estimate. SGD
-therefore estimates gradients afresh, whereas TSGD transports an initial
-estimate by estimating gradient changes. Their error mechanisms differ: SGD
-is sensitive to the magnitude of gradient noise, while TSGD is sensitive to
-the variation of that noise along the trajectory. For example, with additive
-noise shared across the two evaluations, the noise cancels exactly from the
-gradient difference. Thus TSGD can tolerate large pointwise gradient
-variance when the noise varies little along the trajectory and the initial
-estimate is sufficiently accurate.
+This distinction changes which properties of stochastic noise matter.
+Classical SGD guarantees depend on its pointwise magnitude, commonly
+bounded by a variance parameter $\sigma^2$. TSGD instead depends on its
+variation along the trajectory, measured by a similarity parameter
+$\delta$, together with the accuracy of its initial estimate.
+High similarity means \emph{small} $\delta$: stochastic gradient changes
+closely match deterministic gradient changes. It can hold with large
+pointwise noise and does not require a finite-sum objective. Its value
+comes with a distinct limitation: pure transport preserves initialization
+errors and accumulates the errors in subsequent differences.
 
-This distinction is captured by a similarity parameter $\delta$ that
-controls the mean-square error in stochastic gradient changes. A small
-$\delta$ is the key condition for accurate transport; it can arise when
-component gradients are similar, but does not require a finite-sum objective.
-TSGD's transport error therefore depends on noise variation rather than on a
-uniform bound for pointwise noise magnitude. This does not make TSGD
-independent of all noise: an inaccurate initial estimate can persist, and
-transport errors can accumulate along the trajectory. These two error
-sources shape its guarantees and distinguish its behavior from SGD.
+The transport recursion is already present in SARAH and inexact SARAH
+\citep{nguyen2017sarah,nguyen2021inexact}, the path-integrated estimator
+of SPIDER \citep{fang2018spider}, and the transport branch of PAGE
+\citep{li2021page}. Independent inner-run analyses include SARAH-IN,
+iSARAH-IN, and PAGE-NS
+\citep{nguyen2017sarah_nonconvex,nguyen2021inexact,sokolov2022nonconvex}.
+Transport also enters the mixed estimators of STORM/MVR and MARS
+\citep{cutkosky2019momentum,yuan2025mars}. These connections suggest
+studying transport as an elementary estimation mechanism in its own
+right. Our purpose is to explain and unify this known mechanism, making
+its strengths and limitations as visible as those of fresh estimation
+and momentum averaging.
 
-The transport recursion itself is not new. It appears in SARAH and its
-inexact variants, including SARAH-IN and iSARAH-IN
-\citep{nguyen2017sarah,nguyen2021inexact}, and in the path-integrated
-estimator underlying SPIDER \citep{fang2018spider}. It is also recovered by
-PAGE when its refresh probability is set to $p=0$, and is related to PAGE-NS
-\citep{li2021page,sokolov2022nonconvex}; the CGM estimator reduces to the same
-recursion when its momentum parameter is $\beta=0$
-\citep{jiang2026nonconvex}. Despite these appearances, transport is typically
-embedded within a variance-reduction or momentum scheme rather than isolated
-as a basic method. We argue that estimating gradient changes merits study as
-a fundamental mechanism in its own right---a sister to fresh-gradient SGD
-and momentum SGD (MSGD). We study this known mechanism on its own, not as a
-claim to a new algorithm, to clarify what transport guarantees and when it
-is effective.
-
-Our contributions are fourfold:
+The paper develops this viewpoint through three contributions:
 \begin{itemize}
-  \item We give a unified convergence analysis for TSGD that accounts for
-  both inexact initialization and stochastic gradient changes.
-  \item We characterize the separate effects of initialization and transport
-  errors. A scalar quadratic model yields exact dynamics in all four cases
-  formed by exact or inexact initialization and exact or stochastic
-  transport.
-  \item We compare SGD and TSGD under their respective noise assumptions and
-  convergence guarantees, and use additive- and multiplicative-noise
-  examples to identify regimes favoring each method.
-  \item We connect the transport recursion to existing variance-reduced and
-  momentum-based methods, separating transport from the refresh or momentum
-  mechanisms combined with it.
+\item \textbf{Fundamental viewpoint.} We present TSGD alongside SGD and
+MSGD as a basic way of using stochastic-gradient information, centered on
+estimating changes rather than absolute gradients.
+\item \textbf{Theory and understanding.} We explain similarity, separate
+initialization and transport errors, and give a finite-horizon guarantee
+under conditional assumptions on the gradient-change increments.
+\item \textbf{Regimes and connections.} Exact examples and a controlled
+numerical experiment identify when transport is effective and when fresh
+gradients are preferable. We then explain how modern optimizers combine
+these complementary mechanisms.
 \end{itemize}
+The examples precede the convergence analysis so that the role of each
+assumption is visible before the theorem. Detailed proofs and additional
+calculations are collected in the appendices.
+
+\input{figures/fundamental_estimators}

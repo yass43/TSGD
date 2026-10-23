@@ -1,0 +1,166 @@
+% !TEX root = ../main.tex
+\section{Convergence Theory and Comparison with SGD}
+\label{sec:tsgd-convergence}
+
+The examples distinguish noise magnitude from noise variation. We now
+make this distinction explicit in finite-horizon stationarity guarantees.
+Using $G_k$ from the preceding section, write
+\[
+\Delta_0:=f(x_0)-f_{\inf},\qquad
+\overline G_K:=\frac1K\sum_{k=0}^{K-1}G_k,
+\]
+with a superscript identifying the algorithm when needed.
+
+\subsection{Main Convergence Guarantee for TSGD}
+\label{subsec:main-tsgd-theorem}
+
+Let $\mathcal F_k$ contain the history before $D_{k+1}$ is sampled,
+including $x_{k+1}$ and $g_k$, and write
+$m_k:=\nabla f(x_{k+1})-\nabla f(x_k)$. We impose two conditions
+on the increments actually used along the trajectory.
+\begin{assumption}[Unbiased transport]
+\label{ass:unbiased-transport}
+The increments satisfy
+\begin{equation}
+\label{eq:unbiased-transport}
+\mathbb E[D_{k+1}\mid\mathcal F_k]=m_k.
+\end{equation}
+\end{assumption}
+\begin{assumption}[Centered $\delta$-similarity]
+\label{ass:centered-similarity}
+For some $\delta\geq0$,
+\begin{equation}
+\label{eq:centered-similarity}
+\mathbb E[\|D_{k+1}-m_k\|^2\mid\mathcal F_k]
+\leq\delta^2\|x_{k+1}-x_k\|^2.
+\end{equation}
+\end{assumption}
+The shared-sample oracle construction satisfies these assumptions
+under unbiasedness and \eqref{eq:oracle-similarity}; a pointwise
+oracle is not otherwise needed.
+
+\begin{mdframed}[
+  linecolor=black!55,linewidth=0.7pt,
+  innerleftmargin=10pt,innerrightmargin=10pt,
+  innertopmargin=7pt,innerbottommargin=7pt
+]
+\begin{theorem}[Finite-horizon stationarity of TSGD]
+\label{thm:tsgd-stationarity}
+Suppose the objective is smooth and lower bounded
+(Assumption~\ref{ass:smooth-objective}), and the transport increments
+are conditionally unbiased and satisfy centered $\delta$-similarity
+(Assumptions~\ref{ass:unbiased-transport}--\ref{ass:centered-similarity}).
+Allow any initial estimate with $E_0<\infty$, including biased ones.
+For an integer $K\geq1$, choose a constant stepsize $\eta>0$ satisfying
+\begin{equation}
+\label{eq:tsgd-step-condition}
+L\eta+(K-1)\delta^2\eta^2\leq1.
+\end{equation}
+Then
+\begin{equation}
+\label{eq:tsgd-stationarity-bound}
+\overline G_K^{\mathrm{TSGD}}
+\leq\frac{2\Delta_0}{\eta K}+E_0.
+\end{equation}
+\end{theorem}
+\end{mdframed}
+
+\paragraph{Why the guarantee holds.}
+Let $F_k:=\mathbb E[f(x_k)-f_{\inf}]$ and
+$M_k:=\mathbb E[\|g_k\|^2]$. Smoothness gives
+\begin{equation}
+\label{eq:tsgd-fundamental-descent}
+F_{k+1}\leq F_k-\frac\eta2G_k
+  -\frac\eta2(1-L\eta)M_k+\frac\eta2E_k.
+\end{equation}
+The error identity \eqref{eq:transport-error-identity} and similarity
+imply $E_k\leq E_0+\delta^2\eta^2\sum_{t<k}M_t$.
+When the descent inequalities are summed, an error generated at step
+$t$ enters at most $K-1-t$ later estimates. Condition
+\eqref{eq:tsgd-step-condition} ensures that its total contribution is
+no larger than the corresponding negative $M_t$ term. This leaves the
+initialization error and the initial objective gap in
+\eqref{eq:tsgd-stationarity-bound}. Appendix~\ref{app:convergence-proofs}
+gives the full proof, retaining the terminal objective gap and all
+estimator-norm terms. Neither bounded variance nor a pointwise
+gradient oracle is required.
+
+Choosing the largest admissible stepsize gives
+\begin{equation}
+\label{eq:tsgd-simplified-bound}
+\boxed{\overline G_K^{\mathrm{TSGD}}
+\leq\frac{2L\Delta_0}{K}
+    +\frac{2\delta\Delta_0}{\sqrt K}+E_0.}
+\end{equation}
+The terms correspond to deterministic optimization, accumulated
+transport noise, and initialization error. Small $\delta$ permits larger
+steps and a smaller transport contribution. With $\delta=0$, the
+admissible step is $1/L$; if also $E_0=0$, we recover gradient descent.
+The additive $E_0$ term reflects the error that pure transport preserves,
+and its coefficient is sharp (Appendix~\ref{app:quadratic-dynamics}).
+For $\delta>0$, the prescribed constant step decreases with the horizon:
+this theorem does not assert asymptotic stationarity for an infinite
+run with a fixed positive step.
+
+Related single-run guarantees appear in SARAH-IN, iSARAH-IN, and
+PAGE-NS \citep{nguyen2017sarah_nonconvex,nguyen2021inexact,sokolov2022nonconvex}.
+The formulation here expresses the argument directly through unbiased
+increments and their centered similarity.
+
+\subsection{Comparison with SGD}
+\label{subsec:sgd-guarantees}
+
+For SGD, unbiasedness and BV give the standard smooth nonconvex
+guarantee \citep{ghadimi2013stochastic}. The fixed step $\eta=1/L$
+yields $\overline G_K^{\mathrm{SGD}}\leq2L\Delta_0/K+\sigma^2$.
+For $\Delta_0>0$, optimizing the constant step for the prescribed
+horizon replaces this persistent variance term by a decaying one, as
+shown in Table~\ref{tab:sgd-tsgd-guarantees}. The exact stepsizes and
+derivations are in Appendix~\ref{app:convergence-proofs}.
+
+\begin{table}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}p{0.20\textwidth}p{0.34\textwidth}p{0.37\textwidth}@{}}
+\toprule
+ & SGD & TSGD\\
+\midrule
+Noise assumption & BV: pointwise magnitude $\sigma$
+  & Centered similarity: variation $\delta$\\
+Tuned bound on $\overline G_K$
+  & $\displaystyle\frac{2L\Delta_0}{K}
+      +\sqrt{\frac{2L\Delta_0\sigma^2}{K}}$
+  & $\displaystyle\frac{2L\Delta_0}{K}
+      +\frac{2\delta\Delta_0}{\sqrt K}+E_0$\\
+Pointwise evaluations & $K$ & $B_0+2(K-1)$\\
+\bottomrule
+\end{tabular}
+\caption{Finite-horizon guarantees under each method's noise assumptions,
+with constant stepsizes optimized separately. Both require a smooth,
+lower-bounded objective. Costs count $K$ iterate updates and an
+initialization using $B_0$ evaluations for TSGD.}
+\label{tab:sgd-tsgd-guarantees}
+\end{table}
+
+The comparison reflects the different information the methods use:
+SGD's bound depends on noise magnitude, while TSGD's depends on noise
+variation and initial accuracy. Small $\delta$ can favor transport even
+when $\sigma$ is large. BV and global similarity do not imply one another
+(Appendix~\ref{app:noise-assumptions}), so these bounds apply under
+different assumptions and do not establish universal superiority.
+If $\Delta_0=0$, the initial point is already a global minimizer and
+can be returned without running either algorithm.
+
+\subsection{Computational Considerations}
+\label{subsec:computational-considerations}
+
+TSGD requires an initial estimate and, in the shared pointwise-oracle
+implementation, two gradient evaluations per transport increment.
+Accurate differences may nevertheless need far fewer samples than
+accurate absolute gradients: small-batch transport can preserve
+information obtained from a more expensive initial estimate. The
+benefit depends on both its initial cost and the subsequent accuracy
+of the differences. Iteration counts alone therefore do not compare
+computational work. Appendix~\ref{app:oracle-complexity} gives batch
+initialization costs and comparisons at equal oracle budgets.

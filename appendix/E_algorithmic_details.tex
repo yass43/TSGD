@@ -1,0 +1,220 @@
+% !TEX root = ../main.tex
+\subsection{Additional Estimator Identities and Sampling Details}
+\label{app:algorithmic-details}
+
+We expand the relationships in Table~\ref{tab:transport-building-blocks}.
+Throughout, $H_{k+1}$ is a fresh unbiased estimate of
+$\nabla f(x_{k+1})$, possibly a minibatch average or an exact gradient,
+and $D_{k+1}$ estimates
+$\nabla f(x_{k+1})-\nabla f(x_k)$. Unless stated otherwise,
+the two endpoints of a stochastic difference use the same fresh sample
+or minibatch. These are identities for the gradient estimators; each
+method has its own stepsizes, output rules, and iterate update.
+
+\subsubsection{Periodic Restarts: SARAH and SPIDER}
+\label{subsec:periodic-restarts}
+
+SARAH initializes an inner loop with a full gradient and then applies
+$g_{k+1}=g_k+D_{k+1}$ using stochastic gradient differences
+\citep{nguyen2017sarah,nguyen2017sarah_nonconvex}. SARAH-IN is therefore
+a transport phase with exact initialization. Inexact SARAH replaces
+the full gradient by a sufficiently accurate minibatch estimate
+\citep{nguyen2021inexact}. SPIDER uses the same recursive estimator
+between periodic full-gradient or large-batch recomputations
+\citep{fang2018spider}; normalized or adaptive iterate updates are
+additional features of that method.
+
+For a transport phase starting at iteration $s$, conditional
+unbiasedness gives
+\begin{equation}
+\label{eq:restart-error-window}
+E_k=E_s+\sum_{t=s}^{k-1}\mathbb E[\|d_{t+1}\|^2].
+\end{equation}
+Indeed, $e_{t+1}=e_t+d_{t+1}$ and
+$\mathbb E[\langle e_t,d_{t+1}\rangle]=0$ give
+$E_{t+1}=E_t+\mathbb E[\|d_{t+1}\|^2]$, which telescopes over the
+phase. At a restart, replacing the estimator by an exact gradient sets
+$E_s=0$; a fresh independent batch of size $B$ gives
+$E_s\leq\sigma^2/B$ under BV. Tracking errors then accumulate only
+within the new phase. Shorter phases limit this accumulation but
+require more frequent recomputations. A restart corrects the estimate
+at the current point; it does not undo the effect of earlier errors
+on the iterates.
+
+\subsubsection{Random Restarts: Geom-SARAH}
+\label{subsec:random-restarts}
+
+Geom-SARAH retains the SARAH recursion but draws the inner-loop length
+from a geometric distribution \citep{horvath2022adaptivity}. Each epoch
+starts with a fresh batch estimate and passes its final point to the
+next epoch. Batch sizes and expected epoch lengths may vary between
+epochs. If $N_j$ is the number of inner steps in epoch $j$, write
+\[
+\mathbb P(N_j=n)=p_j(1-p_j)^n,\quad n\geq0,
+\qquad \mathbb E[N_j]=\frac{1-p_j}{p_j}.
+\]
+The memoryless property corresponds to a constant stopping probability
+within an epoch. With initialization batch $B_j$ and transport batch
+$b_j$, the expected number of pointwise gradient evaluations is at most
+$B_j+2b_j\mathbb E[N_j]$. Longer phases spread the initialization cost
+over more steps but allow errors to accumulate for longer. The geometric
+law controls the expected duration without imposing a deterministic
+maximum. Geom-SARAH couples this randomization with batch-size
+schedules in its convergence analysis.
+
+\subsubsection{Probabilistic Refreshing: PAGE and MARINA}
+\label{subsec:probabilistic-refreshing}
+
+For a fixed refresh probability $p$, PAGE's estimator is
+\citep{li2021page}
+\begin{equation}
+\label{eq:page-refresh-transport}
+g_{k+1}=c_{k+1}H_{k+1}
+       +(1-c_{k+1})(g_k+D_{k+1}),
+\qquad c_{k+1}\sim\operatorname{Bernoulli}(p).
+\end{equation}
+The decision is independent of the history and the new samples. The
+refresh branch uses a fresh batch, and the transport branch typically
+uses a smaller batch of coupled differences. Define
+\[
+q_k=\mathbb E[\|d_{k+1}\|^2],\qquad
+v_{k+1}=\mathbb E[\|H_{k+1}-\nabla f(x_{k+1})\|^2].
+\]
+Conditioning on the branch and using conditional unbiasedness of the
+transport increment yields
+\begin{equation}
+\label{eq:refresh-error-recursion}
+E_{k+1}=(1-p)(E_k+q_k)+p\,v_{k+1}.
+\end{equation}
+There is no cross term between the two branches because exactly one
+is selected. Within the transport branch, the cross term between
+$e_k$ and $d_{k+1}$ vanishes by conditional unbiasedness.
+Each transport error survives only until the next refresh. An exact
+refresh has $v_{k+1}=0$; a stochastic refresh replaces the previous
+error by its own batch error. The boundary $p=0$ recovers TSGD, while
+$p=1$ gives minibatch SGD. For $0<p<1$, refreshing mitigates persistent
+initialization error and accumulated transport errors.
+
+MARINA uses the same probabilistic choice in distributed optimization
+\citep{gorbunov2021marina}. For $f=n^{-1}\sum_i f_i$, the refresh branch
+computes $H_{k+1}=\nabla f(x_{k+1})$ and the transport branch uses
+compressed local gradient differences:
+\begin{equation}
+\label{eq:marina-increment}
+D_{k+1}^{\mathcal Q}
+=\frac1n\sum_{i=1}^n
+\mathcal Q_{i,k+1}\!\left(
+\nabla f_i(x_{k+1})-\nabla f_i(x_k)\right).
+\end{equation}
+Unbiased compression makes this increment conditionally unbiased,
+although the full gradient estimator need not be. Refreshing removes
+accumulated compression error; transporting communicates compressed
+changes. Thus increment noise can arise from compression as well as
+stochastic gradient sampling. Verifying a similarity bound for the
+compressed increment requires the corresponding compression and
+local-smoothness assumptions; unbiased compression alone only
+establishes the conditional mean.
+
+\subsubsection{Mixing Fresh and Transported Estimates: MVR and STORM}
+\label{subsec:mixing-estimates}
+
+The momentum variance-reduction recursion used by STORM combines a
+fresh estimate with a transported estimate at every iteration
+\citep{cutkosky2019momentum}. For fresh weight $\alpha\in[0,1]$,
+\begin{equation}
+\label{eq:mvr-mixture}
+\begin{aligned}
+g_{k+1}
+&=(1-\alpha)(g_k+D_{k+1})+\alpha H_{k+1}\\
+&=h(x_{k+1},\xi_{k+1})
+ +(1-\alpha)\bigl(g_k-h(x_k,\xi_{k+1})\bigr).
+\end{aligned}
+\end{equation}
+The second equality uses the same fresh sample $\xi_{k+1}$ in
+$H_{k+1}$ and $D_{k+1}$. STORM chooses an iteration-dependent weight
+linked to its stepsize; the fixed-weight notation exposes the estimator
+identity. Subtracting the true gradient gives
+\begin{equation}
+\label{eq:mvr-error-recursion}
+e_{k+1}=(1-\alpha)e_k+(1-\alpha)d_{k+1}
+ +\alpha\bigl(H_{k+1}-\nabla f(x_{k+1})\bigr).
+\end{equation}
+Mixing damps inherited error while introducing transport and
+fresh-gradient noise. A larger $\alpha$ strengthens the correction but
+places more weight on pointwise noise; a smaller $\alpha$ relies more
+on accurate changes. The boundaries $\alpha=0$ and $\alpha=1$ give
+TSGD and SGD, respectively.
+
+For a deterministic weight, conditional unbiasedness eliminates cross
+terms with $e_k$, so the precise mean-square relation is
+\[
+\begin{split}
+E_{k+1}={}&(1-\alpha)^2(E_k+q_k)+\alpha^2v_{k+1}\\
+&+2\alpha(1-\alpha)\mathbb E\!\left[
+\left\langle d_{k+1},H_{k+1}-\nabla f(x_{k+1})\right\rangle
+\right].
+\end{split}
+\]
+Unlike PAGE's mutually exclusive branches, the two new noises occur
+together and share a sample. Their covariance generally cannot be
+discarded. If weights depend on the history, the analogous equality
+holds conditionally, with the weights retained inside expectations
+after averaging over that history.
+
+\subsubsection{Transport Corrections within Momentum: MARS and VENUS}
+\label{subsec:mars-transport}
+
+Before clipping, MARS scales the gradient-difference correction
+within momentum \citep{yuan2025mars}. Write $\beta=1-\beta_1$ for
+the fresh-gradient weight, where $\beta_1$ is its original momentum
+coefficient. The estimator is
+\begin{equation}
+\label{eq:mars-estimator}
+g_{k+1}=(1-\beta)(g_k+\gamma D_{k+1})+\beta H_{k+1}.
+\end{equation}
+The difference uses the same sample at both endpoints. Setting
+$\gamma=0$ yields MSGD's exponential moving average; $\gamma=1$
+yields MVR with fresh weight $\beta$. For $\gamma\in[0,1]$, the
+VENUS manuscript gives the convex interpolation
+\citep{venus2026draft}
+\[
+g_{k+1}^{\mathrm{MARS}}
+=(1-\gamma)g_{k+1}^{\mathrm{MSGD}}
+ +\gamma g_{k+1}^{\mathrm{MVR}},
+\]
+where the two candidates share the incoming estimate, sample, and
+fresh weight $\beta$. The boundary $\beta=0$, $\gamma=1$ of the
+displayed estimator is pure transport. This is a boundary of the
+expanded estimator identity; the original implementation's rescaled
+correction may not be defined at $\beta=0$.
+
+For $\gamma\ne1$, the scaled increment has conditional mean
+$\gamma(\nabla f(x_{k+1})-\nabla f(x_k))$ and generally does not
+satisfy Assumption~\ref{ass:unbiased-transport}. Full MARS
+implementations additionally use clipping and preconditioning, and
+the cached-gradient approximation changes the difference's sampling.
+Subtracting a cached gradient evaluated using a previous sample need
+not produce a conditionally unbiased increment satisfying
+Assumption~\ref{ass:centered-similarity}.
+
+VENUS further separates the samples used by the MSGD and MVR branches
+\citep{venus2026draft}. It preserves shared sampling within each
+transported difference but assigns part of the fresh contribution to
+an independent batch. This changes the covariance between refreshing
+and transporting as well as their weights. The estimator design
+therefore depends on sample coupling, not only on the coefficients
+in a linear combination.
+
+\subsubsection{Pure Transport as an Established Special Case}
+
+The transport mechanism has also been studied independently of
+refreshing, including SARAH-IN and iSARAH-IN
+\citep{nguyen2017sarah_nonconvex,nguyen2021inexact} and PAGE-NS
+\citep{sokolov2022nonconvex}. The $p=0$ boundary of PAGE is the same
+recursion \citep{li2021page}. In the CGM estimator, the corresponding
+boundary is its momentum parameter $\beta=0$
+\citep{jiang2026nonconvex}; this parameter belongs to CGM's notation
+and is distinct from the fresh-gradient weight used for MARS above.
+These relationships identify a shared estimation mechanism while
+leaving each method's oracle model, iterate updates, and convergence
+assumptions intact.

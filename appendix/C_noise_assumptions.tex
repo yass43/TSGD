@@ -1,0 +1,144 @@
+% !TEX root = ../main.tex
+\section{Noise Assumptions}
+\label{app:noise-assumptions}
+
+\subsection{Bounded Variance and Similarity Are Incomparable}
+\label{subsec:comparing-assumptions}
+
+Write $h(x,\xi)=\nabla f(x)+r(x,\xi)$ with
+$\mathbb E_\xi[r(x,\xi)]=0$. BV bounds
+$\mathbb E_\xi[\|r(x,\xi)\|^2]$ uniformly in $x$, whereas global
+similarity bounds
+$\mathbb E_\xi[\|r(x,\xi)-r(y,\xi)\|^2]$ by
+$\delta^2\|x-y\|^2$. The latter is sufficient for the conditional
+trajectory condition in Assumption~\ref{ass:centered-similarity}
+when each coupled difference uses a fresh sample. The conditional
+condition may be weaker because it concerns only the generated
+increments. The counterexamples below compare the two global oracle
+conditions.
+
+\paragraph{BV does not imply global similarity.}
+Take $f(x)=x^2/2$ and $h(x,\xi)=x+\xi\sin(x^2)$, where $\xi$
+takes the values $-1$ and $1$ with equal probability. The oracle is
+unbiased and
+\[
+\mathbb E_\xi[|h(x,\xi)-\nabla f(x)|^2]
+ =\sin^2(x^2)\leq1,
+\]
+so BV holds with $\sigma^2=1$. Under shared sampling,
+\[
+\mathbb E_\xi[|r(x,\xi)-r(y,\xi)|^2]
+ =\bigl(\sin(x^2)-\sin(y^2)\bigr)^2.
+\]
+A finite similarity constant would imply
+\[
+\begin{aligned}
+|\sin(x^2)-\sin(y^2)|&\leq\delta|x-y|
+   &&\text{for every }x,y,\\
+|2x\cos(x^2)|
+ &=\lim_{y\to x}\frac{|\sin(y^2)-\sin(x^2)|}{|y-x|}
+ \leq\delta &&\text{for every }x.
+\end{aligned}
+\]
+But $x_n=\sqrt{2\pi n}$ gives
+$|2x_n\cos(x_n^2)|=2\sqrt{2\pi n}\to\infty$, a contradiction.
+
+\paragraph{Global similarity does not imply BV.}
+Take $f(x)=\log\cosh x$ and
+$h(x,\xi)=\tanh x+\xi x$, with
+$\mathbb E[\xi]=0$ and $\mathbb E[\xi^2]=\delta^2>0$.
+The objective is lower bounded and $1$-smooth, since
+\[
+f(x)\geq0,\qquad \nabla f(x)=\tanh x,\qquad
+f''(x)=\frac1{\cosh^2x}\in(0,1].
+\]
+The unbiased oracle has residual $r(x,\xi)=\xi x$, and hence
+\[
+\mathbb E_\xi[|r(x,\xi)-r(y,\xi)|^2]
+ =\delta^2(x-y)^2,
+\qquad
+\mathbb E_\xi[|r(x,\xi)|^2]=\delta^2x^2.
+\]
+Similarity holds with equality, but no finite global BV constant
+exists. These examples establish incomparability of assumptions;
+they do not by themselves order the performance of SGD and TSGD.
+
+\subsection{A TSGD Guarantee without Bounded Variance}
+\label{subsec:similarity-without-bv}
+
+For the log-cosh example above, $f_{\inf}=0$ and the fresh coupled
+increment is
+\[
+D_{k+1}=\tanh x_{k+1}-\tanh x_k
+       +\xi_{k+1}(x_{k+1}-x_k).
+\]
+Its conditional error variance is exactly
+$\delta^2(x_{k+1}-x_k)^2$. Therefore, for deterministic $x_0$ and
+arbitrary initialization with finite $E_0$,
+\eqref{eq:tsgd-optimized-bound} gives
+\begin{equation}
+\label{eq:logcosh-tsgd-guarantee}
+\overline G_K^{\mathrm{TSGD}}
+\leq\frac{\log\cosh x_0}{K}
+       \left(1+\sqrt{1+4(K-1)\delta^2}\right)+E_0.
+\end{equation}
+With exact initialization, this is an $O(K^{-1/2})$ stationarity
+guarantee even though pointwise gradient variance is unbounded.
+
+For comparison, fixed-step SGD satisfies
+$x_{k+1}=x_k-\eta\tanh x_k-\eta\xi_kx_k$.
+For $V_k:=\mathbb E[x_k^2]$, independence and centering give
+\[
+\begin{aligned}
+V_{k+1}
+ &=\mathbb E[(x_k-\eta\tanh x_k)^2]+\eta^2\delta^2V_k\\
+ &\geq(1+\eta^2\delta^2)V_k-2\eta\sqrt{V_k},
+\end{aligned}
+\]
+where $|\tanh x|\leq1$ and Cauchy--Schwarz were used. If
+$|x_0|\geq4/(\eta\delta^2)$, then
+\[
+\sqrt{V_k}\geq\frac4{\eta\delta^2}
+\quad\Longrightarrow\quad
+2\eta\sqrt{V_k}\leq\frac{\eta^2\delta^2}{2}V_k
+\quad\Longrightarrow\quad
+V_{k+1}\geq\left(1+\frac{\eta^2\delta^2}{2}\right)V_k.
+\]
+Induction preserves the threshold and proves divergence of the
+iterate second moment. This does not establish failure of stationarity,
+which concerns $\mathbb E[\tanh^2x_k]$. Failure of BV alone is not
+evidence that SGD cannot converge.
+
+\subsection{Quadratic Finite Sums and the Smallest Similarity Constant}
+\label{app:quadratic-similarity}
+
+For $f_i(x)=\tfrac12x^\top A_ix+b_i^\top x+c_i$ with symmetric
+$A_i$, let $f=n^{-1}\sum_i f_i$, $\bar A=n^{-1}\sum_i A_i$, and
+sample $i$ uniformly. By \eqref{eq:quadratic-difference-noise},
+the centered difference is $(A_i-\bar A)(x-y)$. For $z=x-y$,
+\[
+\mathbb E_i[\|(A_i-\bar A)z\|^2]
+ =z^\top\!\left(\frac1n\sum_{i=1}^n(A_i-\bar A)^2\right)z.
+\]
+Taking the supremum over $\|z\|=1$ gives the smallest admissible
+global constant,
+\begin{equation}
+\label{eq:quadratic-optimal-similarity}
+\delta_{\min}^2
+ =\lambda_{\max}\!\left(\frac1n\sum_{i=1}^n(A_i-\bar A)^2\right).
+\end{equation}
+The linear terms cancel irrespective of their magnitude, while the
+smoothness constant of the average quadratic is
+$L=\|\bar A\|_{\mathrm{op}}$. There is no fixed ordering between
+$\delta$ and $L$. Identical $A_i$ give $\delta_{\min}=0$ even with
+large $L$ and arbitrarily different $b_i$. Conversely, for $n\geq3$
+scalar components, take $f_1(x)=nLx^2/2$ and $f_i(x)=0$ for $i\geq2$.
+Then $f(x)=Lx^2/2$ but
+\[
+\delta_{\min}^2
+ =\frac1n\bigl((nL-L)^2+(n-1)L^2\bigr)
+ =(n-1)L^2>L^2.
+\]
+Thus similarity measures the discrepancy between stochastic and
+deterministic gradient changes, rather than the smoothness of their
+average.

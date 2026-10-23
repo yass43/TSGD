@@ -1,0 +1,14 @@
+% !TEX root = ../main.tex
+\section{Conclusion}
+\label{sec:conclusion}
+
+Transported SGD is a fundamental way to use stochastic-gradient
+information: it estimates changes and carries an existing estimate
+along the trajectory. Its strength becomes visible when noise is
+understood through its variation as well as its magnitude. Accurate
+initialization and high similarity can make transport effective even
+when individual gradients are very noisy. Its persistent initialization
+error and accumulated transport errors explain both its limitations
+and its complementarity with fresh estimation and momentum averaging.
+Recognizing these distinct mechanisms clarifies why transport appears
+throughout modern optimization, and why the balance between them matters.
