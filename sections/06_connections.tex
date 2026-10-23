@@ -2,12 +2,14 @@
 \section{TSGD as a Building Block of Modern Optimization}
 \label{sec:connections}
 
-The two error sources identified in Section~\ref{sec:algorithms-and-errors}
-explain why transport is often combined with fresh gradient information.
-Pure transport preserves initialization error and accumulates errors in
-gradient changes. Recomputing or mixing in a fresh estimate provides a way
-to correct the inherited error. This section identifies these operations
-in several established methods.
+TSGD is useful when pointwise stochastic gradients are noisy but their
+changes along the trajectory are accurate. With small $\delta$ and
+accurate initialization, it can carry useful gradient information
+forward through these low-variation changes, even when fresh absolute
+gradients have large variance. Several established methods build on
+this transport mechanism in different ways: SARAH and SPIDER restart
+it periodically, Geom-SARAH randomizes the restart time, and PAGE,
+STORM, and MARS combine it with fresh gradients.
 
 We use a common notation for their estimator updates: $H_{k+1}$ denotes
 a fresh unbiased estimate of $\nabla f(x_{k+1})$, possibly a minibatch
@@ -136,12 +138,12 @@ Here $H_{k+1}$ and $D_{k+1}$ share the fresh sample $\xi_{k+1}$.
 STORM uses an iteration-dependent mixing weight linked to its
 stepsize; the fixed-weight notation exposes the common mechanism.
 
-Set $\zeta_{k+1}=H_{k+1}-\nabla f(x_{k+1})$. Subtracting the true
-gradient gives
+Substituting \eqref{eq:mvr-mixture} into
+$e_{k+1}=g_{k+1}-\nabla f(x_{k+1})$ gives
 \begin{equation}
 \label{eq:mvr-error-recursion}
 e_{k+1}=(1-\alpha)e_k+(1-\alpha)d_{k+1}
-                         +\alpha\zeta_{k+1}.
+ +\alpha\bigl(H_{k+1}-\nabla f(x_{k+1})\bigr).
 \end{equation}
 Thus mixing damps the inherited error while introducing both transport
 noise and fresh-gradient noise. A larger $\alpha$ strengthens the
