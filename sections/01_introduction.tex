@@ -29,8 +29,10 @@ noisy. Transport exploits this information directly. For example,
 additive noise cancels exactly from a shared-sample difference;
 with an exact initial estimate, TSGD then follows the deterministic
 gradient-descent trajectory, regardless of the additive noise variance.
-\textbf{TODO: Add a concrete learning example illustrating shared-noise
-cancellation in stochastic gradient differences.}
+Least-squares regression provides a concrete example: labels cancel from
+shared-sample gradient differences, whose accuracy depends only on the
+features. Label noise therefore enters TSGD through its initial estimate
+(Section~\ref{subsec:understanding-similarity}).
 
 This distinction changes which properties of stochastic noise matter.
 Classical SGD guarantees depend on its pointwise magnitude, commonly

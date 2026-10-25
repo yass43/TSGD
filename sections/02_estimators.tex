@@ -95,6 +95,24 @@ Hessian heterogeneity controls $\delta$, whereas $L$ concerns the average
 Hessian; neither must be smaller than the other
 (Appendix~\ref{app:noise-assumptions}).
 
+For least-squares regression, $f(x)=\tfrac12\mathbb E[(a^\top x-b)^2]$
+with features $a$ and labels $b$, the oracle is
+$h(x;a,b)=a(a^\top x-b)$. Writing $\Sigma=\mathbb E[aa^\top]$, we obtain
+\begin{equation}
+\label{eq:least-squares-similarity}
+\begin{aligned}
+h(x;a,b)-h(y;a,b)&=aa^\top(x-y),\\
+\delta^2&=\lambda_{\max}\!\left(\mathbb E[(aa^\top-\Sigma)^2]\right),
+\end{aligned}
+\end{equation}
+where $\delta$ is the smallest similarity constant, assuming
+$\mathbb E[\|a\|^4]<\infty$ and the label moments in
+Appendix~\ref{app:least-squares}. Label noise can increase pointwise
+gradient variance without affecting $\delta$. Feature variation remains:
+isotropic Gaussian features give $\delta^2=(d+1)L^2$, so cancellation
+alone does not ensure a small similarity constant. Appendix~\ref{app:least-squares}
+derives these identities and shows that global BV fails whenever $\delta>0$.
+
 \subsection{Two Fundamental Sources of TSGD Error}
 \label{subsec:martingale-interpretation}
 
