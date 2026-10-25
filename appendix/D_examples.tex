@@ -192,14 +192,24 @@ constant $\delta=\sigma\omega$ for $\omega\geq0$.
 
 \begin{proof}
 A uniform phase makes the cosine have mean zero and second moment
-$1/2$. For the coupled difference,
+$1/2$, so
+$\mathbb E[r(x,\varphi)^2]=2\sigma^2(1/2)=\sigma^2$.
+For the coupled difference,
 \[
 r(x,\varphi)-r(y,\varphi)
 =-2\sqrt2\sigma
 \sin\!\left(\frac{\omega(x+y)}2+\varphi\right)
 \sin\!\left(\frac{\omega(x-y)}2\right).
 \]
-Squaring and averaging proves \eqref{eq:phase-noise-moments}.
+Squaring and using
+$\mathbb E_\varphi[\sin^2(c+\varphi)]=1/2$ for every fixed $c$ gives
+\[
+\mathbb E[|r(x,\varphi)-r(y,\varphi)|^2]
+=8\sigma^2\cdot\frac12\,
+  \sin^2\!\left(\frac{\omega(x-y)}2\right)
+=4\sigma^2\sin^2\!\left(\frac{\omega(x-y)}2\right).
+\]
+This verifies \eqref{eq:phase-noise-moments}.
 The inequality $|\sin t|\leq|t|$ proves similarity with
 $\delta=\sigma\omega$; minimality follows from
 \[

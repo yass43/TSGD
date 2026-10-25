@@ -17,18 +17,31 @@ The individual gradients can be arbitrarily noisy, yet
 h(x,\xi)-h(y,\xi)=x-y=\nabla f(x)-\nabla f(y).
 \]
 Thus $\delta=0$, independently of $\sigma$. With exact
-initialization, TSGD follows gradient descent exactly. From $x_0=1$
-with $\eta=1$, it reaches the minimizer in one step. SGD instead
-has $x_{k+1}=-\xi_k$ and $G_k=\sigma^2$ for every $k\geq1$.
-Horizon-dependent steps can remove this SGD residual, but do not
-recover the noiseless trajectory; the exact calculations are in
-Appendix~\ref{app:additive-details}. Accurate initialization is
-essential here: exact transport preserves any initial error.
+initialization, TSGD follows gradient descent exactly. Indeed,
+$g_k=\nabla f(x_k)$ and an exact difference give
+\[
+g_{k+1}=g_k+\nabla f(x_{k+1})-\nabla f(x_k)=\nabla f(x_{k+1}).
+\]
+Induction from $g_0=\nabla f(x_0)$ proves this for any objective.
+Appendix~\ref{subsec:exact-init-exact-transport} gives the resulting
+GD convergence guarantee and proves that the gradients tend to zero.
+For the present quadratic, $x_0=1$ and $\eta=1$ give
+\[
+G_k^{\mathrm{TSGD}}=0,\qquad
+G_k^{\mathrm{SGD}}=\sigma^2,\qquad k\geq1.
+\]
+TSGD reaches the minimizer after one step, while SGD has
+$x_{k+1}=-\xi_k$. Tuning SGD's stepsize to the horizon makes its
+average stationarity error decay, but does not recover the noiseless
+trajectory (Appendix~\ref{app:additive-details}). Exact transport
+alone cannot compensate for an inaccurate initial estimate.
 
 \subsection{Fixed Noise Magnitude, Variable Similarity}
 \label{subsec:fixed-variance-variable-similarity}
 
-To vary similarity without changing the noise magnitude, take
+To determine whether noise magnitude alone explains the relative behavior
+of SGD and TSGD, we compare oracles with the same pointwise noise
+distribution but different noise variation. For $\omega\geq0$, consider
 \begin{equation}
 \label{eq:fixed-variance-oracle}
 f(x)=\frac L2x^2,\qquad
@@ -48,8 +61,8 @@ The smallest global similarity constant is $\delta=\sigma\omega$
 (Appendix~\ref{app:sinusoidal-proof}). Pointwise noise has the same
 distribution for every $x$ and $\omega$, so SGD has identical
 expected squared-gradient dynamics at every frequency. TSGD,
-however, sees exact differences at $\omega=0$ and increasingly
-permissive similarity bounds as $\omega$ increases. Its actual
+however, has exact transport at $\omega=0$, while its similarity
+constant grows as $\delta=\sigma\omega$. Its actual
 transport error depends on the displacement through the sine term.
 
 \begin{figure}[t]
@@ -58,8 +71,9 @@ transport error depends on the displacement through the sine term.
 \caption{Same pointwise variance, different transport accuracy.
 Monte Carlo means over $10^5$ runs, with bands of two standard errors;
 $L=\sigma=x_0=1$ and a common constant stepsize $\eta=0.1$.
-Every method starts from the same exact estimate, obtained using two
-antithetic oracle evaluations, charged on the horizontal axis.
+Every method initializes by averaging gradients at phases $\varphi_0$
+and $\varphi_0+\pi$: their noises cancel, giving $g_0=Lx_0$.
+These two evaluations are included in the horizontal-axis count.
 Subsequent SGD updates cost one evaluation and TSGD updates cost two.
 SGD is simulated at $\omega=1$; its expected curve is identical at
 all frequencies. Appendix~\ref{app:numerical-details} gives the
@@ -70,10 +84,9 @@ sampling, cost accounting, and reproducible numerical details.}
 Figure~\ref{fig:similarity-experiment} isolates this distinction at
 equal oracle cost. At small frequencies, TSGD retains accurate
 information despite the persistent pointwise noise. At $\omega=2$,
-its mean squared true-gradient norm exceeds SGD's in these runs. The figure shows
-why noise magnitude alone cannot predict the usefulness of
-transport; it does not assert monotonicity of each realized error
-with frequency or superiority under every stepsize choice.
+its mean squared true-gradient norm exceeds SGD's in these runs.
+Thus, at the same pointwise noise level and stepsize, changing the
+noise variation changes which method performs better.
 
 \subsection{When Fresh Gradients Are Preferable}
 \label{subsec:multiplicative-noise-comparison}
@@ -104,12 +117,13 @@ preferable even when initialization is exact.
 \subsection{What Transport Cannot Do}
 \label{subsec:four-case-summary}
 
-The two sources of error in Section~\ref{subsec:martingale-interpretation}
-also interact. In the quadratic model
-$f(x)=\lambda x^2/2$, $h(x;a,b)=(\lambda+a)x+b$, with $\lambda>0$, take independent
-centered $a,b$ with $\mathbb E[a^2]=\delta^2$. Coupling cancels $b$;
-initialization and the remaining transport noise produce the four
-regimes in Table~\ref{tab:four-error-regimes}.
+To separate the effects of initialization and transport, consider
+$f(x)=\lambda x^2/2$ and $h(x;a,b)=(\lambda+a)x+b$, with $\lambda>0$,
+independent noises satisfying $\mathbb E[a]=\mathbb E[b]=0$,
+$\mathbb E[a^2]=\delta^2$, and $\mathbb E[b^2]<\infty$.
+Shared sampling cancels $b$. Table~\ref{tab:four-error-regimes} summarizes
+the four cases, whose exact dynamics are developed in
+Appendix~\ref{app:quadratic-dynamics}.
 
 \begin{table}[t]
 \centering
@@ -129,13 +143,33 @@ are established in Appendix~\ref{app:quadratic-dynamics}.}
 \label{tab:four-error-regimes}
 \end{table}
 
-Exact differences cannot identify a missing constant gradient
-offset: adding $\langle c,x\rangle$ to an objective leaves every
-gradient difference unchanged. An initial error $e_0$ therefore
-persists under exact transport, and TSGD follows GD on
-$f(x)+\langle e_0,x\rangle$. With stochastic transport, even exact
-initialization can lead to false convergence, as above. A noisy
-initial estimate also changes the early displacements, and hence
-the transport errors subsequently accumulated. These limitations
-explain why similarity and initialization accuracy enter the
-convergence theory separately.
+\emph{Exact transport preserves initialization error.}
+When $\delta=0$, the error identity gives $e_k=e_0$, hence
+$g_k=\nabla f(x_k)+e_0$ for every $k$. With $e_0=0$ this is GD;
+otherwise it is GD on $f(x)+\langle e_0,x\rangle$. The obstruction
+is informational: adding a linear term leaves all gradient differences
+unchanged, so differences alone cannot recover a missing constant
+gradient offset. On the quadratic, for $0<\eta<2/\lambda$,
+$x_k\to-e_0/\lambda$ in mean square and $G_k\to E_0$
+(Appendix~\ref{subsec:inexact-init-exact-transport}).
+
+\emph{Stochastic transport can produce a nonzero error floor.}
+For $0<\eta<2\lambda/(\lambda^2+\delta^2)$ and
+$M_0:=\mathbb E[|g_0|^2]$, the exact quadratic dynamics give
+\begin{equation}
+\label{eq:quadratic-residual-overview}
+\lim_{k\to\infty}\mathbb E[|g_k|^2]=0,\qquad
+\lim_{k\to\infty}G_k
+=E_0+\frac{\eta\delta^2 M_0}{2\lambda-\eta(\lambda^2+\delta^2)}.
+\end{equation}
+With exact initialization, $M_0=\lambda^2x_0^2$: if $\delta>0$ and
+$x_0\ne0$, the estimate vanishes in mean square while the true gradient
+has a positive limiting mean-square norm.
+Appendix~\ref{subsec:exact-init-stochastic-transport} proves both limits.
+
+\emph{The two errors interact.} Initialization affects the residual
+directly through $E_0$ and indirectly through $M_0$, which controls the
+steps and the transport errors they generate. For centered initialization
+error, $M_0=\lambda^2x_0^2+E_0$, so improving the initial estimate reduces
+both contributions. Appendix~\ref{subsec:inexact-init-stochastic-transport}
+derives this interaction and the associated conservation law.

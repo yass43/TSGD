@@ -26,7 +26,7 @@ The increments satisfy
 \mathbb E[D_{k+1}\mid\mathcal F_k]=m_k.
 \end{equation}
 \end{assumption}
-\begin{assumption}[Centered $\delta$-similarity]
+\begin{assumption}[Similarity along the trajectory]
 \label{ass:centered-similarity}
 For some $\delta\geq0$,
 \begin{equation}
@@ -35,9 +35,10 @@ For some $\delta\geq0$,
 \leq\delta^2\|x_{k+1}-x_k\|^2.
 \end{equation}
 \end{assumption}
-The shared-sample oracle construction satisfies these assumptions
-under unbiasedness and \eqref{eq:oracle-similarity}; a pointwise
-oracle is not otherwise needed.
+Assumptions~\ref{ass:unbiased-oracle} and \ref{ass:oracle-similarity}
+imply these two conditions for shared-sample gradient differences.
+Stating them directly on the increments also allows transport without
+a pointwise gradient oracle.
 
 \begin{mdframed}[
   linecolor=black!55,linewidth=0.7pt,
@@ -98,9 +99,12 @@ steps and a smaller transport contribution. With $\delta=0$, the
 admissible step is $1/L$; if also $E_0=0$, we recover gradient descent.
 The additive $E_0$ term reflects the error that pure transport preserves,
 and its coefficient is sharp (Appendix~\ref{app:quadratic-dynamics}).
-For $\delta>0$, the prescribed constant step decreases with the horizon:
-this theorem does not assert asymptotic stationarity for an infinite
-run with a fixed positive step.
+The guarantee approaches $E_0$ as the horizon grows. This floor can be
+attained even with exact transport, as
+Section~\ref{subsec:four-case-summary} shows. Stochastic transport can
+create an additional floor when the stepsize is held fixed. For
+$\delta>0$, the theorem controls this accumulation by choosing a
+smaller stepsize for a longer run.
 
 Related single-run guarantees appear in SARAH-IN, iSARAH-IN, and
 PAGE-NS \citep{nguyen2017sarah_nonconvex,nguyen2021inexact,sokolov2022nonconvex}.
@@ -149,8 +153,6 @@ variation and initial accuracy. Small $\delta$ can favor transport even
 when $\sigma$ is large. BV and global similarity do not imply one another
 (Appendix~\ref{app:noise-assumptions}), so these bounds apply under
 different assumptions and do not establish universal superiority.
-If $\Delta_0=0$, the initial point is already a global minimizer and
-can be returned without running either algorithm.
 
 \subsection{Computational Considerations}
 \label{subsec:computational-considerations}

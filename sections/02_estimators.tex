@@ -22,7 +22,8 @@ the same iterate update, starting from a deterministic $x_0$:
 \label{eq:tsgd-iterate}
 x_{k+1}=x_k-\eta_k g_k.
 \end{equation}
-They differ in how they construct the next estimate:
+They differ in how they construct $g_{k+1}$, their estimate of
+$\nabla f(x_{k+1})$:
 \begin{align}
 \mathrm{SGD}:\quad g_{k+1}
   &=h(x_{k+1},\xi_{k+1}), \label{eq:sgd-estimate}\\
@@ -37,13 +38,15 @@ In the standard pointwise-oracle construction,
 \label{eq:shared-sample-increment}
 D_{k+1}=h(x_{k+1},\xi_{k+1})-h(x_k,\xi_{k+1}).
 \end{equation}
-Both evaluations use the \emph{same fresh sample}. SGD replaces its
-estimate, MSGD averages past and current information, and TSGD updates
-past information to account for a gradient change. Averaging can reduce
-noise but retain gradients from earlier points; transport keeps that
-information current but inherits its estimation error. SGD initializes
-with a fresh gradient; TSGD permits any $g_0$ with finite mean-square
-error, including a biased estimate.
+Both evaluations use the \emph{same fresh sample}. SGD draws a fresh
+gradient estimate, MSGD averages it with the previous estimate, and TSGD
+adds an estimated gradient change from $x_k$ to $x_{k+1}$ to $g_k$,
+transporting it to the new iterate. Momentum averaging can reduce
+noise, but gradients from earlier iterates can make the estimate lag
+behind the current gradient, especially when the gradient changes rapidly.
+Transport accounts for this change but inherits the estimation error
+in $g_k$. SGD initializes with a fresh gradient; TSGD permits any
+$g_0$ with finite mean-square error, including a biased estimate.
 
 \subsection{Understanding Similarity}
 \label{subsec:understanding-similarity}
@@ -58,18 +61,23 @@ For some $\sigma\geq0$,
 \qquad\text{for all }x.
 \end{equation}
 \end{assumption}
-Transport instead benefits from \emph{centered similarity}:
+Transport instead uses a condition on gradient differences.
+\begin{assumption}[Centered $\delta$-similarity]
+\label{ass:oracle-similarity}
+For some $\delta\geq0$,
 \begin{equation}
 \label{eq:oracle-similarity}
 \mathbb E_{\xi}[\|r(x,\xi)-r(y,\xi)\|^2]
 \leq\delta^2\|x-y\|^2
 \qquad\text{for all }x,y.
 \end{equation}
+\end{assumption}
 Here $\sigma$ bounds the magnitude of individual gradient errors, whereas
 $\delta$ measures their variation under shared sampling. A small $\delta$
 means that stochastic gradient differences closely match deterministic
 gradient differences; it does not require the gradients themselves, or
-their changes, to be small. Similarity does not require a finite sum.
+their changes, to be small. Similarity is a condition on the stochastic
+oracle and applies to both finite-sum and population objectives.
 
 For an illustration, let $f=n^{-1}\sum_i f_i$ with
 $f_i(x)=\tfrac12x^\top A_i x+b_i^\top x+c_i$ and symmetric $A_i$.
@@ -79,7 +87,8 @@ Uniformly sampling $i$, and writing $\bar A=n^{-1}\sum_i A_i$, gives
 [\nabla f_i(x)-\nabla f_i(y)]-[\nabla f(x)-\nabla f(y)]
 =(A_i-\bar A)(x-y).
 \end{equation}
-The linear terms cancel. Components can therefore have very different
+The linear terms $b_i^\top x$ cancel from the gradient differences.
+Components can therefore have very different
 gradients but nearly identical gradient changes. Identical Hessians give
 exact transport even with arbitrarily large additive gradient noise.
 Hessian heterogeneity controls $\delta$, whereas $L$ concerns the average
@@ -102,7 +111,7 @@ mean and is orthogonal in expectation to previous errors. Consequently,
 \label{eq:transport-error-identity}
 E_k=E_0+\sum_{t=0}^{k-1}\mathbb E[\|d_{t+1}\|^2].
 \end{equation}
-Initialization error persists, and each transport error adds to it.
+Initialization error persists, while transport errors accumulate.
 Similarity bounds each contribution by the squared displacement, yielding
 \begin{equation}
 \label{eq:transport-error-growth}
