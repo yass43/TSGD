@@ -148,3 +148,31 @@ relies on each mechanism. Fixed choices provide a compromise, while
 adapting them can respond to changing conditions. The balance matters:
 combining estimators does not automatically improve convergence, and
 a poor choice can perform worse than using one estimator alone.
+
+\paragraph{Improved complexity through refreshing.}
+When bounded variance and centered similarity hold together, combining
+estimators can improve the available convergence guarantees on the same
+problem class. SGD repeatedly obtains fresh gradient information but
+does not explicitly exploit accurate shared-sample gradient differences.
+Pure TSGD exploits these differences, but obtains absolute-gradient
+information only through initialization. It retains initialization
+error and accumulates transport noise.
+
+SPIDER \citep{fang2018spider} and PAGE \citep{li2021page} combine
+transport with periodic or probabilistic refreshing. An accurate
+gradient estimate can then support many inexpensive transport steps,
+while each refresh replaces the inherited error with the error of a
+fresh estimate. This limits how long transport errors accumulate and
+allows larger steps without requiring an expensive gradient estimate
+at every iteration.
+With suitable batch sizes and refresh schedules,
+these methods attain $O(\varepsilon^{-3})$ oracle complexity, compared
+with the $O(\varepsilon^{-4})$ guarantees for SGD and pure TSGD in
+Section~\ref{sec:tsgd-convergence}. This $\varepsilon^{-3}$ dependence
+matches the lower bound of
+\citet{pmlr-v300-fradin26a} for zero-respecting algorithms on this
+same problem class; Appendix~\ref{app:common-class-lower-bound} gives the
+precise statement. The comparison shows
+how combining the mechanisms can improve a guarantee; it does not
+establish an $\Omega(\varepsilon^{-4})$ lower bound for pure TSGD.
+Pure TSGD can already converge faster when transport is exact.

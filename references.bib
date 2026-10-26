@@ -238,3 +238,30 @@
    author={Qu, Guannan and Li, Na},
    year={2018},
    month=sep, pages={1245--1260} }
+
+
+@misc{arjevani2022lowerboundsnonconvexstochastic,
+      title={Lower Bounds for Non-Convex Stochastic Optimization}, 
+      author={Yossi Arjevani and Yair Carmon and John C. Duchi and Dylan J. Foster and Nathan Srebro and Blake Woodworth},
+      year={2022},
+      eprint={1912.02365},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/1912.02365}, 
+}
+
+@InProceedings{pmlr-v300-fradin26a,
+  title = 	 { Tight Lower Bounds and Optimal Algorithms for Stochastic Nonconvex Optimization with Heavy-Tailed Noise },
+  author =       {Fradin, Adrien and Sadiev, Abdurakhmon and Condat, Laurent and Richt{\'a}rik, Peter},
+  booktitle = 	 {Proceedings of The 29th International Conference on Artificial Intelligence and Statistics},
+  pages = 	 {2548--2556},
+  year = 	 {2026},
+  editor = 	 {Khan, Emtiyaz and Li, Yingzhen and Solin, Arno and Ramdas, Aaditya},
+  volume = 	 {300},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {02--05 May},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v300/main/assets/fradin26a/fradin26a.pdf},
+  url = 	 {https://proceedings.mlr.press/v300/fradin26a.html},
+  abstract = 	 { We study stochastic nonconvex optimization under heavy-tailed noise. In this setting, the stochastic gradients only have bounded p–th central moment ($p$–BCM) for some $p \in (1,2]$. Building on the foundational work of Arjevani et al. (2022) in stochastic optimization, we establish tight sample complexity lower bounds for all first-order methods under relaxed mean-squared smoothness ($q$-WAS) and $\delta$-similarity ($(q,\delta)$-S) assumptions, allowing any exponent $q\in[1,2]$ instead of the standard $q= 2$. These results substantially broaden the scope of existing lower bounds. To complement them, we show that Normalized Stochastic Gradient Descent with Momentum Variance Reduction (NSGD-MVR), a known algorithm, matches these bounds in expectation. Beyond expectation guarantees, we introduce a new algorithm, Double-Clipped NSGD-MVR, which allows the derivation of high-probability convergence rates under weaker assumptions than in previous works. Finally, for second-order methods with stochastic Hessians satisfying bounded $q$-th central moment assumptions for some exponent $q \in[1,2] $ (allowing $q\neq p$), we establish sharper lower bounds than previous works while improving over Sadiev et al. (2025) (where only $p=q$ is considered) and yielding stronger convergence exponents. Together, these results provide a nearly complete complexity characterization of stochastic nonconvex optimization in heavy-tailed regimes. }
+}

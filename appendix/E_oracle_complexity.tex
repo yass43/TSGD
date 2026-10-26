@@ -136,3 +136,112 @@ initialization error does not satisfy these asymptotic conditions.
 Exact initialization must also have its cost counted in $B_0$.
 Direct increment oracles and implementations that evaluate endpoints
 jointly require their own cost accounting.
+
+\subsection{Refreshing Improves Complexity on a Common Problem Class}
+\label{app:common-class-lower-bound}
+
+\paragraph{Common assumptions and accuracy convention.}
+Fix positive bounds $\Delta,L,\sigma,\delta$, and consider lower-bounded
+objectives with initial gap at most $\Delta$ and $L$-Lipschitz gradients,
+together with unbiased stochastic gradient oracles satisfying both BV
+and centered $\delta$-similarity. These assumptions control individual
+gradients and their differences simultaneously. Indeed, unbiasedness gives
+\begin{equation}
+\label{eq:similarity-implies-mean-square-smoothness}
+\begin{aligned}
+\mathbb E[\|h(x,\xi)-h(y,\xi)\|^2]
+&=\|\nabla f(x)-\nabla f(y)\|^2
+  +\mathbb E[\|r(x,\xi)-r(y,\xi)\|^2]\\
+&\leq(L^2+\delta^2)\|x-y\|^2.
+\end{aligned}
+\end{equation}
+Thus the oracle is mean-squared smooth with constant
+$\bar L=\sqrt{L^2+\delta^2}$.
+We compare the number of stochastic-gradient evaluations needed to find
+$\mathbb E[\|\nabla f(\widehat x)\|]\leq\varepsilon$, the criterion used
+by \citet{arjevani2022lowerboundsnonconvexstochastic}, SPIDER, and PAGE.
+Corollary~\ref{cor:tsgd-iteration-complexity} uses the stronger criterion
+$\mathbb E[\|\nabla f(\widehat x)\|^2]\leq\varepsilon^2$, which implies
+it by Jensen's inequality. The accuracy parameter is therefore on the
+same gradient-norm scale, and the lower bound below applies to both
+criteria. The oracle model allows gradients to be evaluated at multiple
+points using the same sample, which is precisely the access TSGD uses
+to form its differences.
+
+\paragraph{Applicable upper bounds.}
+For fixed positive parameter bounds,
+\eqref{eq:comparison-oracle-complexities} gives
+$O(\varepsilon^{-4})$ oracle budgets for SGD and pure TSGD, including
+initialization. Mean-squared smoothness and BV also ensure that the
+online guarantees of SPIDER \citep{fang2018spider} and PAGE
+\citep{li2021page} apply, yielding $O(\varepsilon^{-3})$ complexity
+with their prescribed batch sizes and refresh schedules.
+
+\paragraph{A lower bound on the same class.}
+The upper bounds show that $O(\varepsilon^{-3})$ evaluations suffice.
+To justify optimality of this exponent, the lower bound must apply
+with the same separately prescribed bounds $L$ and $\delta$.
+Theorem~3.2 of \citet{pmlr-v300-fradin26a} provides such a bound for
+zero-respecting algorithms. Starting at the origin, these algorithms
+only introduce coordinates revealed by previous oracle responses.
+This class includes the standard gradient-based implementations
+discussed here, but does not include every randomized algorithm.
+
+\begin{corollary}[Specialization of Fradin et al., Theorem 3.2]
+\label{cor:common-class-lower-bound}
+Fix $\Delta,L,\sigma,\delta>0$. For all sufficiently small
+$\varepsilon>0$, any zero-respecting algorithm that guarantees
+$\mathbb E[\|\nabla f(\widehat x)\|]\leq\varepsilon$ uniformly over
+the class satisfying
+Assumptions~\ref{ass:smooth-objective}--\ref{ass:oracle-similarity}
+and $f(x_0)-f_{\inf}\leq\Delta$ requires
+\begin{equation}
+\label{eq:common-class-oracle-lower-bound}
+\Omega\!\left(\frac{\Delta\delta\sigma}{\varepsilon^3}\right)
+\end{equation}
+stochastic-gradient evaluations in the worst case.
+The oracle permits any fixed finite number of simultaneous query
+points sharing the same sample, with independent samples across rounds.
+The same lower bound holds for the stronger target
+$\mathbb E[\|\nabla f(\widehat x)\|^2]\leq\varepsilon^2$.
+\end{corollary}
+
+\begin{proof}
+Set $p=q=2$ in Theorem~3.2 of \citet{pmlr-v300-fradin26a}.
+Their bounded central moment and $(q,\delta)$-similarity assumptions
+then become BV and centered $\delta$-similarity, respectively.
+With $L_1=L$ and $\sigma_1=\sigma$, their lower bound is
+\[
+\Omega\!\left(
+\min\left\{
+\frac{L\Delta}{\varepsilon^2}
++\frac{L\Delta\sigma^2}{\varepsilon^4},
+\quad
+\frac{\sigma^2+(L+\delta)\Delta}{\varepsilon^2}
++\frac{\delta\Delta\sigma}{\varepsilon^3}
+\right\}
+\right).
+\]
+The theorem applies for $0<\varepsilon\leq c_1\sqrt{L\Delta}$
+with a universal $c_1>0$.
+For fixed positive parameters, the first branch grows as
+$L\Delta\sigma^2/\varepsilon^4$, whereas the second is asymptotic to
+$\delta\Delta\sigma/\varepsilon^3$. Their ratio tends to infinity,
+so the minimum is the second branch for sufficiently small
+$\varepsilon$, giving the claimed bound.
+The lower bound counts shared-sample query rounds, each requiring
+at least one gradient evaluation, so it also bounds the evaluation
+count. Finally,
+$\mathbb E[\|\nabla f(\widehat x)\|]
+\leq\sqrt{\mathbb E[\|\nabla f(\widehat x)\|^2]}$
+extends the bound to the squared-norm criterion.
+\end{proof}
+
+Together with the SPIDER/PAGE upper bounds,
+Corollary~\ref{cor:common-class-lower-bound} establishes optimality
+of the $\varepsilon^{-3}$ exponent among zero-respecting algorithms
+on this common class as $\varepsilon\to0$, with the positive bounds
+$\Delta,L,\sigma,\delta$ held fixed. This does not establish an
+$\Omega(\varepsilon^{-4})$ lower bound for pure TSGD; its
+$O(\varepsilon^{-4})$ guarantee need not be tight, and exact transport
+can already yield faster convergence.
