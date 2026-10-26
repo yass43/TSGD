@@ -48,7 +48,8 @@ Geom-SARAH retains the SARAH recursion but draws the inner-loop length
 from a geometric distribution \citep{horvath2022adaptivity}. Each epoch
 starts with a fresh batch estimate and passes its final point to the
 next epoch. Batch sizes and expected epoch lengths may vary between
-epochs. If $N_j$ is the number of inner steps in epoch $j$, write
+epochs. If $N_j$ is the number of inner steps in epoch $j$, write,
+for $0<p_j\leq1$,
 \[
 \mathbb P(N_j=n)=p_j(1-p_j)^n,\quad n\geq0,
 \qquad \mathbb E[N_j]=\frac{1-p_j}{p_j}.
@@ -107,7 +108,8 @@ D_{k+1}^{\mathcal Q}
 \nabla f_i(x_{k+1})-\nabla f_i(x_k)\right).
 \end{equation}
 Unbiased compression makes this increment conditionally unbiased,
-although the full gradient estimator need not be. Refreshing removes
+although the full gradient estimator need not be conditionally unbiased.
+Refreshing removes
 accumulated compression error; transporting communicates compressed
 changes. Thus increment noise can arise from compression as well as
 stochastic gradient sampling. Verifying a similarity bound for the
@@ -183,19 +185,16 @@ g_{k+1}^{\mathrm{MARS}}
  +\gamma g_{k+1}^{\mathrm{MVR}},
 \]
 where the two candidates share the incoming estimate, sample, and
-fresh weight $\beta$. The boundary $\beta=0$, $\gamma=1$ of the
-displayed estimator is pure transport. This is a boundary of the
-expanded estimator identity; the original implementation's rescaled
-correction may not be defined at $\beta=0$.
+fresh weight $\beta$. The expanded identity gives pure transport at
+$(\beta,\gamma)=(0,1)$, although MARS's original rescaled correction
+is undefined at $\beta=0$.
 
-For $\gamma\ne1$, the scaled increment has conditional mean
-$\gamma(\nabla f(x_{k+1})-\nabla f(x_k))$ and generally does not
-satisfy Assumption~\ref{ass:unbiased-transport}. Full MARS
-implementations additionally use clipping and preconditioning, and
-the cached-gradient approximation changes the difference's sampling.
-Subtracting a cached gradient evaluated using a previous sample need
-not produce a conditionally unbiased increment satisfying
-Assumption~\ref{ass:centered-similarity}.
+For $\gamma\ne1$, the conditional mean of $\gamma D_{k+1}$ is
+$\gamma(\nabla f(x_{k+1})-\nabla f(x_k))$, so
+Assumption~\ref{ass:unbiased-transport} generally fails.
+Clipping and preconditioning further change the algorithm. A difference
+using a cached gradient can violate both conditional unbiasedness and
+similarity (Assumptions~\ref{ass:unbiased-transport}--\ref{ass:centered-similarity}).
 
 VENUS further separates the samples used by the MSGD and MVR branches
 \citep{venus2026draft}. It preserves shared sampling within each
@@ -211,10 +210,9 @@ The transport mechanism has also been studied independently of
 refreshing, including SARAH-IN and iSARAH-IN
 \citep{nguyen2017sarah_nonconvex,nguyen2021inexact} and PAGE-NS
 \citep{sokolov2022nonconvex}. The $p=0$ boundary of PAGE is the same
-recursion \citep{li2021page}. In the CGM estimator, the corresponding
-boundary is its momentum parameter $\beta=0$
-\citep{jiang2026nonconvex}; this parameter belongs to CGM's notation
-and is distinct from the fresh-gradient weight used for MARS above.
-These relationships identify a shared estimation mechanism while
-leaving each method's oracle model, iterate updates, and convergence
-assumptions intact.
+recursion \citep{li2021page}. The recursive-gradient (RG) estimator
+used within the inexact composite gradient method (I-CGM) also reduces
+to pure transport at its $\beta=0$ boundary \citep{jiang2026nonconvex}.
+Here $\beta$ is the RG mixing parameter, distinct from MARS's fresh
+weight. The shared recursion does not imply identical iterate updates
+or convergence assumptions.

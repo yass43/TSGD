@@ -62,9 +62,9 @@ The unbiased oracle has residual $r(x,\xi)=\xi x$, and hence
 Similarity holds with equality, but no finite global BV constant
 exists. These examples establish incomparability of assumptions;
 they do not by themselves order the performance of SGD and TSGD.
-Appendix~\ref{app:least-squares} gives a natural instance: least squares
-with a feature second-moment matrix of rank at least two satisfies
-similarity but violates global BV.
+Under the moment conditions of Appendix~\ref{app:least-squares}, least
+squares with a feature second-moment matrix of rank at least two gives
+a natural instance of similarity without global BV.
 
 \subsection{A TSGD Guarantee without Bounded Variance}
 \label{subsec:similarity-without-bv}
@@ -152,6 +152,7 @@ average.
 \paragraph{Setting.}
 Let $(a,b)\in\mathbb R^d\times\mathbb R$ satisfy
 $\mathbb E[\|a\|^4]<\infty$ and $\Sigma:=\mathbb E[aa^\top]\ne0$.
+Each oracle sample is an independent copy of $(a,b)$.
 Assume $b=a^\top x^\star+\varepsilon$, where
 \[
 \mathbb E[\varepsilon\mid a]=0,\qquad
@@ -185,9 +186,11 @@ Define the positive semidefinite matrix
 M:=\mathbb E[(aa^\top-\Sigma)^2]
   =\mathbb E[\|a\|^2aa^\top]-\Sigma^2.
 \]
-Then $\mathbb E[\|r(x)-r(y)\|^2]=(x-y)^\top M(x-y)$,
-which proves \eqref{eq:least-squares-similarity} by maximizing over
-unit displacements. Conditional centering of $\varepsilon$ removes
+Then $\mathbb E[\|r(x)-r(y)\|^2]=(x-y)^\top M(x-y)$.
+Maximizing over unit displacements gives the smallest constant
+$\delta^2=\lambda_{\max}(M)$ in \eqref{eq:least-squares-similarity};
+we use this value throughout this subsection.
+Conditional centering of $\varepsilon$ removes
 the cross term in \eqref{eq:ls-noise}, giving
 \begin{equation}
 \label{eq:ls-variance}
@@ -222,7 +225,7 @@ $M=R^2\Sigma-\Sigma^2$ and $\delta^2=(d-1)L^2$.
 Thus even normalized features can have $\delta/L$ of order $\sqrt d$.
 
 \paragraph{Where label noise enters.}
-Use independent samples across iterations and a fixed stepsize $\eta>0$.
+Use a fixed stepsize $\eta>0$.
 Writing $z_k=x_k-x^\star$, the recursions are
 \begin{equation}
 \label{eq:ls-recursions}

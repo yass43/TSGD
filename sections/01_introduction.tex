@@ -13,7 +13,7 @@ guarantees for smooth nonconvex objectives
 
 Fresh estimation is one fundamental way to construct a gradient estimate.
 Momentum SGD (MSGD) adds another: it averages stochastic-gradient
-information across iterations, reducing noise while potentially lagging
+information across iterations, which can reduce noise while potentially lagging
 behind a changing gradient. A third mechanism is equally natural:
 estimate how the gradient changes, and add that change to an existing
 estimate. We call this mechanism \emph{Transported SGD (TSGD)}.

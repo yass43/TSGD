@@ -45,8 +45,9 @@ transporting it to the new iterate. Momentum averaging can reduce
 noise, but gradients from earlier iterates can make the estimate lag
 behind the current gradient, especially when the gradient changes rapidly.
 Transport accounts for this change but inherits the estimation error
-in $g_k$. SGD initializes with a fresh gradient; TSGD permits any
-$g_0$ with finite mean-square error, including a biased estimate.
+in $g_k$. Unless specified otherwise, SGD and MSGD initialize with
+$g_0=h(x_0,\xi_0)$. TSGD permits any $g_0$ with finite mean-square
+error, including a biased estimate.
 
 \subsection{Understanding Similarity}
 \label{subsec:understanding-similarity}
@@ -109,7 +110,8 @@ where $\delta$ is the smallest similarity constant, assuming
 $\mathbb E[\|a\|^4]<\infty$ and the label moments in
 Appendix~\ref{app:least-squares}. Label noise can increase pointwise
 gradient variance without affecting $\delta$. Feature variation remains:
-isotropic Gaussian features give $\delta^2=(d+1)L^2$, so cancellation
+Gaussian features $a\sim\mathcal N(0,LI_d)$ give $\delta^2=(d+1)L^2$,
+so cancellation
 alone does not ensure a small similarity constant. Appendix~\ref{app:least-squares}
 derives these identities and shows that global BV fails whenever $\delta>0$.
 

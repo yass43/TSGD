@@ -122,7 +122,7 @@ transport term; exact transport removes the latter but preserves $E_0$.
 \subsection{SGD under Bounded Variance}
 \label{app:sgd-convergence}
 
-Assume \ref{ass:smooth-objective}--\ref{ass:bounded-variance}, and
+Under Assumptions~\ref{ass:smooth-objective}--\ref{ass:bounded-variance},
 let $F_k,G_k$ now refer to the SGD iterates. Conditional unbiasedness
 and BV imply
 \[
@@ -182,7 +182,8 @@ already stationary; the optimized formula above is not used.
 \subsection{Iteration Complexity}
 \label{subsec:tsgd-complexity}
 
-Let $R$ be uniform on $\{0,\ldots,K-1\}$, independent of the run.
+Fix an accuracy target $\varepsilon>0$ and let $R$ be uniform on
+$\{0,\ldots,K-1\}$, independent of the run.
 Then $\mathbb E[\|\nabla f(x_R)\|^2]=\overline G_K$.
 
 \begin{corollary}[Sufficient TSGD horizon]
