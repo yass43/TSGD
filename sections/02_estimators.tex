@@ -73,6 +73,16 @@ For some $\delta\geq0$,
 \qquad\text{for all }x,y.
 \end{equation}
 \end{assumption}
+Under uniform finite-sum sampling, this condition coincides with the
+Hessian-variance condition of
+\citet{szlendak2021permutationcompressorsprovablyfaster} and the
+second-order similarity assumption of
+\citet{khaled2023fasterfederatedoptimizationsecondorder}.
+More recently, \citet{pmlr-v306-shulgin26b} generalized it through
+$\gamma$-similarity, which recovers this condition at $\gamma=1$.
+We use the name \emph{centered $\delta$-similarity} to emphasize that it
+measures the variation of gradient noise rather than its magnitude.
+
 Here $\sigma$ bounds the magnitude of individual gradient errors, whereas
 $\delta$ measures their variation under shared sampling. A small $\delta$
 means that stochastic gradient differences closely match deterministic

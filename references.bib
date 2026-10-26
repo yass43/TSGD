@@ -164,3 +164,41 @@
   year   = {2026},
   note   = {Manuscript under review at ICLR 2027; version supplied by the authors}
 }
+
+@InProceedings{pmlr-v306-shulgin26b,
+  title = 	 {Understanding {MARS}: When Scaling Momentum Correction Provably Helps},
+  author =       {Shulgin, Egor and Gadaev, Tamaz and Khirirat, Sarit and Richt\'{a}rik, Peter},
+  booktitle = 	 {Proceedings of the 43rd International Conference on Machine Learning},
+  pages = 	 {112936--112965},
+  year = 	 {2026},
+  editor = 	 {Zhang, Tong and Dudik, Miroslav and Jaggi, Martin and Agarwal, Alekh and Li, Sharon and Schuurmans, Dale and Zhu, Jerry and Berkenkamp, Felix and Dong, Hanze and Bietti, Alberto},
+  volume = 	 {306},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {06--11 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v306/main/assets/shulgin26b/shulgin26b.pdf},
+  url = 	 {https://proceedings.mlr.press/v306/shulgin26b.html},
+  abstract = 	 {MARS (Yuan et al., 2025) has recently emerged as a strong optimizer for large language model (LLM) training by scaling the correction term in momentum-based variance reduction (MVR). However, existing theory does not explain why this modification can improve convergence over the unscaled MVR choice $\gamma=1$. In this paper, we provide a theoretical explanation for this phenomenon. We introduce <b>$\gamma$-similarity</b>, a refined similarity condition that captures how the scaling coefficient interacts with the stochastic gradient-difference structure. This condition recovers standard similarity at $\gamma=1$ and smoothness at $\gamma=0$. Using $\gamma$-similarity, we derive convergence guarantees for fixed-$\gamma$ MARS whose complexity depends explicitly on $\gamma$ and the corresponding $\gamma$-similarity constant. The bound reveals why small values of $\gamma$ can be beneficial: they may reduce the similarity term enough to outweigh the penalty from deviating from MVR. We prove that optimizing $\gamma$ gives MARS a lower complexity guarantee than MVR. Experiments with MARS-AdamW on GPT-style LLM pretraining corroborate the theory, showing that properly chosen small values of $\gamma$ improve token efficiency over $\gamma=1$ and AdamW under a fixed training protocol.}
+}
+
+@inproceedings{khaled2023fasterfederatedoptimizationsecondorder,
+      title={Faster federated optimization under second-order similarity},
+      author={Ahmed Khaled and Chi Jin},
+      booktitle={International Conference on Learning Representations},
+      year={2023},
+      eprint={2209.02257},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://openreview.net/forum?id=ElC6LYO4MfD},
+}
+
+@inproceedings{szlendak2021permutationcompressorsprovablyfaster,
+      title={Permutation Compressors for Provably Faster Distributed Nonconvex Optimization},
+      author={Rafa{\l} Szlendak and Alexander Tyurin and Peter Richt{\'a}rik},
+      booktitle={International Conference on Learning Representations},
+      year={2022},
+      eprint={2110.03300},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://openreview.net/forum?id=GugZ5DzzAu},
+}
