@@ -66,6 +66,21 @@ batch sizes, stepsizes, and iterate updates belong to each algorithm.}
 \label{tab:transport-building-blocks}
 \end{table}
 
+SVRG \citep{NIPS2013_ac1dd209} and SAGA
+\citep{defazio2014sagafastincrementalgradient} also use stochastic
+gradient differences to reduce variance. SVRG compares component
+gradients at the current iterate and a reference point held fixed
+within each epoch, adding the full gradient at that reference point.
+SAGA instead stores past gradients for individual components and
+combines the sampled component's gradient difference with the average
+of the stored gradients, updating one entry at each iteration.
+Both exploit noise cancellation in gradient differences. Unlike TSGD,
+they do not transport the previous gradient estimate along successive
+iterates: each estimate combines a current component gradient with
+stored reference information. In their standard forms, these estimates
+are conditionally unbiased, whereas pure TSGD inherits and accumulates
+tracking errors.
+
 SARAH and SPIDER transport an estimate between full-gradient or
 large-batch recomputations
 \citep{nguyen2017sarah,nguyen2017sarah_nonconvex,fang2018spider}.
