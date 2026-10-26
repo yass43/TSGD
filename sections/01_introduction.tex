@@ -29,10 +29,12 @@ noisy. Transport exploits this information directly. For example,
 additive noise cancels exactly from a shared-sample difference;
 with an exact initial estimate, TSGD then follows the deterministic
 gradient-descent trajectory, regardless of the additive noise variance.
-Least-squares regression provides a concrete example: labels cancel from
-shared-sample gradient differences, whose accuracy depends only on the
-features. Label noise therefore enters TSGD through its initial estimate
-(Section~\ref{subsec:understanding-similarity}).
+In least-squares regression, for instance, label noise contributes an
+additive gradient-noise term. The stochastic gradient $u(u^\top x-b)$
+carries it, whereas the shared-sample difference $uu^\top(x-y)$ contains
+no label. Conditional on the initial estimate, transport is therefore
+insensitive to label noise, while fresh gradients pay for it at every
+step (Section~\ref{subsec:understanding-similarity}).
 
 This distinction changes which properties of stochastic noise matter.
 Classical SGD guarantees depend on its pointwise magnitude, commonly

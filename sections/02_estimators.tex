@@ -96,24 +96,33 @@ Hessian heterogeneity controls $\delta$, whereas $L$ concerns the average
 Hessian; neither must be smaller than the other
 (Appendix~\ref{app:noise-assumptions}).
 
-For least-squares regression, $f(x)=\tfrac12\mathbb E[(a^\top x-b)^2]$
-with features $a$ and labels $b$, the oracle is
-$h(x;a,b)=a(a^\top x-b)$. Writing $\Sigma=\mathbb E[aa^\top]$, we obtain
+Scalar least squares separates the two quantities. Let
+$f(x)=\tfrac12\mathbb E[(ux-b)^2]$, with feature $u$ satisfying
+$0<\mathbb E[u^2]$ and $\mathbb E[u^4]<\infty$, and label
+$b=ux^\star+\varepsilon$. The label noise $\varepsilon$ is independent
+of $u$, with $\mathbb E[\varepsilon]=0$ and
+$\mathbb E[\varepsilon^2]=s^2<\infty$. The stochastic gradient is
+$h(x;u,\varepsilon)=u^2(x-x^\star)-u\varepsilon$, so
 \begin{equation}
 \label{eq:least-squares-similarity}
 \begin{aligned}
-h(x;a,b)-h(y;a,b)&=aa^\top(x-y),\\
-\delta^2&=\lambda_{\max}\!\left(\mathbb E[(aa^\top-\Sigma)^2]\right),
+h(x;u,\varepsilon)-h(y;u,\varepsilon)&=u^2(x-y),\\
+\mathbb E[|h(x;u,\varepsilon)-\nabla f(x)|^2]
+&=\delta^2(x-x^\star)^2+Ls^2,
 \end{aligned}
 \end{equation}
-where $\delta$ is the smallest similarity constant, assuming
-$\mathbb E[\|a\|^4]<\infty$ and the label moments in
-Appendix~\ref{app:least-squares}. Label noise can increase pointwise
-gradient variance without affecting $\delta$. Feature variation remains:
-Gaussian features $a\sim\mathcal N(0,LI_d)$ give $\delta^2=(d+1)L^2$,
-so cancellation
-alone does not ensure a small similarity constant. Appendix~\ref{app:least-squares}
-derives these identities and shows that global BV fails whenever $\delta>0$.
+where $\delta^2=\operatorname{Var}(u^2)$ and $L=\mathbb E[u^2]$.
+The two terms play different roles. Label noise contributes to the noise
+magnitude but cancels from differences, while feature variability sets
+$\delta$. Increasing $s$ therefore makes every fresh gradient noisier
+without affecting transport. When $\delta>0$, the pointwise noise
+variance is unbounded in $x$, so similarity holds but global BV fails.
+Label noise still affects TSGD through its initial estimate, but not
+through later transport increments. Sections~\ref{subsec:additive-noise-comparison}
+and~\ref{subsec:multiplicative-noise-comparison} illustrate the two
+extremes of this model: a constant feature ($\delta=0$) with label noise
+favors transport with accurate initialization, whereas noiseless labels
+($s=0$) with varying features make fresh gradients exact at the minimizer.
 
 \subsection{Two Fundamental Sources of TSGD Error}
 \label{subsec:martingale-interpretation}
