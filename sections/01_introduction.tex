@@ -33,7 +33,7 @@ Centered $\delta$-similarity quantifies this variation: small $\delta$
 means that stochastic gradient changes closely match deterministic
 gradient changes. Thus, transport can remain accurate even when
 pointwise noise is large. This condition applies to population
-objectives and not only to finite-sum objective.
+objectives and not only to finite-sum objectives.
 
 Transport nevertheless has two fundamental error sources.
 Initialization error persists, while errors in subsequent gradient
@@ -45,14 +45,12 @@ of the initial estimate. At fixed values of these quantities, it is
 independent of $\sigma$, although the noise magnitude can affect the
 cost of obtaining an accurate initial estimate.
 
-Least-squares regression illustrates this separation. Label noise
-contributes an additive gradient-noise term: the stochastic gradient
-$u(u^\top x-b)$ carries it, whereas the shared-sample difference
-$uu^\top(x-y)$ contains no label. Conditional on the initial estimate,
-transport is therefore insensitive to label noise, while fresh
-gradients pay for it at every step
-(Section~\ref{subsec:understanding-similarity}). Feature variability
-can still make the transported differences noisy.
+Least-squares regression provides a concrete example. Label noise
+enters the stochastic gradient $u(u^\top x-b)$, but cancels from the
+shared-sample difference $uu^\top(x-y)$. It therefore affects fresh
+gradient estimates and TSGD's initialization, but not its subsequent
+transport increments. Feature variability can still make those
+increments noisy (Section~\ref{subsec:understanding-similarity}).
 
 The transport recursion is not new. It appears in established
 variance-reduced algorithms such as SARAH, SPIDER, and PAGE
@@ -62,9 +60,13 @@ single-run analyses already exist
 It is commonly encountered as part of methods that combine transport
 with refreshing or mixing. Our purpose is to study the mechanism
 directly, making its strengths and limitations as explicit as those
-of SGD. Section~\ref{sec:connections} then places it
-describes how modern optimizers use TSGD and combine transport with
-fresh gradients and momentum averaging.
+of SGD.
+
+Momentum SGD (MSGD) provides a third fundamental mechanism:
+averaging fresh gradients with past estimates.
+Section~\ref{sec:algorithms-and-errors} introduces all three estimators,
+and Section~\ref{sec:connections} describes how modern optimizers use
+TSGD and combine transport with fresh gradients and momentum averaging.
 
 The paper develops this viewpoint through three contributions:
 \begin{itemize}
