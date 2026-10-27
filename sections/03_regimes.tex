@@ -25,16 +25,24 @@ g_{k+1}=g_k+\nabla f(x_{k+1})-\nabla f(x_k)=\nabla f(x_{k+1}).
 Induction from $g_0=\nabla f(x_0)$ proves this for any objective.
 Appendix~\ref{subsec:exact-init-exact-transport} gives the resulting
 GD convergence guarantee and proves that the gradients tend to zero.
-For the present quadratic, $x_0=1$ and $\eta=1$ give
+
+For the present quadratic, take $x_0=1$, $\eta=1$, and any initial
+estimate $g_0=1+e_0$ with $E_0=\mathbb E[e_0^2]<\infty$, biased or not.
+Then $x_1=-e_0$ and $g_1=g_0+(x_1-x_0)=0$, so TSGD stays at
+$x_k=-e_0$ for all $k\geq1$. SGD instead uses a fresh gradient at
+every update, giving $x_{k+1}=-\xi_k$. Consequently,
 \[
-G_k^{\mathrm{TSGD}}=0,\qquad
-G_k^{\mathrm{SGD}}=\sigma^2,\qquad k\geq1.
+\boxed{G_k^{\mathrm{TSGD}}=E_0,\qquad
+G_k^{\mathrm{SGD}}=\sigma^2,\qquad k\geq1.}
 \]
-TSGD reaches the minimizer after one step, while SGD has
-$x_{k+1}=-\xi_k$. Tuning SGD's stepsize to the horizon makes its
-average stationarity error decay, but does not recover the noiseless
-trajectory (Appendix~\ref{app:additive-details}). Exact transport
-alone cannot compensate for an inaccurate initial estimate.
+Transport preserves the quality of its initial information, good or bad:
+TSGD has the smaller error when $E_0<\sigma^2$ and the larger error
+when $E_0>\sigma^2$. A single exact gradient evaluation at initialization,
+$g_0=\nabla f(x_0)$, gives $E_0=0$: TSGD reaches the minimizer in one
+step and $G_k^{\mathrm{TSGD}}=0$ for every $k\geq1$, without any further
+exact gradient evaluations. In contrast, single-sample initialization
+$g_0=h(x_0,\xi_0)$ gives the same error as SGD.
+
 
 \subsection{Fixed Noise Magnitude, Variable Similarity}
 \label{subsec:fixed-variance-variable-similarity}
@@ -144,13 +152,13 @@ are established in Appendix~\ref{app:quadratic-dynamics}.}
 \end{table}
 
 \emph{Exact transport preserves initialization error.}
-When $\delta=0$, the error identity gives $e_k=e_0$, hence
+The behavior in Section~\ref{subsec:additive-noise-comparison} extends
+beyond quadratics. When $\delta=0$, the error identity gives $e_k=e_0$, hence
 $g_k=\nabla f(x_k)+e_0$ for every $k$. With $e_0=0$ this is GD;
 otherwise it is GD on $f(x)+\langle e_0,x\rangle$. The obstruction
 is informational: adding a linear term leaves all gradient differences
 unchanged, so differences alone cannot recover a missing constant
-gradient offset. On the quadratic, for $0<\eta<2/\lambda$,
-$x_k\to-e_0/\lambda$ in mean square and $G_k\to E_0$
+gradient offset
 (Appendix~\ref{subsec:inexact-init-exact-transport}).
 
 \emph{Stochastic transport can produce a nonzero error floor.}
