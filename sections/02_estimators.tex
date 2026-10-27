@@ -171,13 +171,23 @@ The transport update gives
 \label{eq:estimation-error-recursion}
 \boxed{e_{k+1}=e_k+d_{k+1}.}
 \end{equation}
-For conditionally unbiased increments, the new error has zero conditional
-mean and is orthogonal in expectation to previous errors. Consequently,
+Let $\mathcal F_k$ denote the history before drawing $D_{k+1}$,
+including $x_{k+1}$ and $g_k$. Conditionally unbiased increments give
+\[
+\mathbb E[g_{k+1}\mid\mathcal F_k]
+=\nabla f(x_{k+1})+e_k.
+\]
+Unlike SGD, TSGD is therefore generally conditionally biased:
+the new increment is unbiased, but the estimator inherits its previous
+error. The increment error $d_{k+1}$ has zero conditional mean and is
+orthogonal in expectation to previous errors. Consequently,
 \begin{equation}
 \label{eq:transport-error-identity}
 E_k=E_0+\sum_{t=0}^{k-1}\mathbb E[\|d_{t+1}\|^2].
 \end{equation}
-Initialization error persists, while transport errors accumulate.
+Even if $\mathbb E[e_0]=0$, so that $\mathbb E[e_k]=0$, the
+mean-square error $E_k$ cannot decrease. Initialization error persists,
+while transport errors accumulate.
 Similarity bounds each contribution by the squared displacement, yielding
 \begin{equation}
 \label{eq:transport-error-growth}

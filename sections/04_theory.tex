@@ -14,8 +14,8 @@ with a superscript identifying the algorithm when needed.
 \subsection{Main Convergence Guarantee for TSGD}
 \label{subsec:main-tsgd-theorem}
 
-Let $\mathcal F_k$ contain the history before $D_{k+1}$ is sampled,
-including $x_{k+1}$ and $g_k$, and write
+Using the history $\mathcal F_k$ defined in
+Section~\ref{subsec:martingale-interpretation}, write
 $m_k:=\nabla f(x_{k+1})-\nabla f(x_k)$. We impose two conditions
 on the increments actually used along the trajectory.
 \begin{assumption}[Unbiased transport]
