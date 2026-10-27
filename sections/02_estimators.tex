@@ -5,6 +5,32 @@
 \subsection{SGD, MSGD, and TSGD}
 \label{subsec:algorithms-and-assumptions}
 
+How should we construct an estimate of $\nabla f(x_{k+1})$?
+The identity
+\[
+\nabla f(x_{k+1})
+=\nabla f(x_k)+\bigl[\nabla f(x_{k+1})-\nabla f(x_k)\bigr]
+\]
+suggests two approaches. SGD estimates the left-hand side directly,
+drawing a fresh stochastic gradient at the new point. TSGD estimates
+the right-hand side: its current estimate $g_k$ already approximates
+the first term, so it needs new information only for the change.
+Using a stochastic gradient oracle $h$ with the same fresh sample
+at both endpoints gives
+\[
+g_{k+1}
+=\underbrace{g_k}_{\approx\,\nabla f(x_k)}
++\underbrace{h(x_{k+1},\xi_{k+1})-h(x_k,\xi_{k+1})}
+ _{\approx\,\nabla f(x_{k+1})-\nabla f(x_k)}.
+\]
+Thus TSGD updates the gradient information it already has.
+The sample $\xi_{k+1}$ is shared within the difference and drawn afresh
+at each iteration. For a finite sum, this means evaluating the same
+randomly selected component at both points. TSGD retains the information
+in $g_k$, including its estimation error; the effect of these inherited
+errors is examined in Section~\ref{subsec:martingale-interpretation}.
+
+We formalize the setup as follows.
 \begin{assumption}[Smooth, lower-bounded objective]
 \label{ass:smooth-objective}
 The function $f:\mathbb R^d\to\mathbb R$ has an $L$-Lipschitz gradient,
@@ -22,8 +48,7 @@ the same iterate update, starting from a deterministic $x_0$:
 \label{eq:tsgd-iterate}
 x_{k+1}=x_k-\eta_k g_k.
 \end{equation}
-They differ in how they construct $g_{k+1}$, their estimate of
-$\nabla f(x_{k+1})$:
+Their gradient estimates differ:
 \begin{align}
 \mathrm{SGD}:\quad g_{k+1}
   &=h(x_{k+1},\xi_{k+1}), \label{eq:sgd-estimate}\\
@@ -38,14 +63,10 @@ In the standard pointwise-oracle construction,
 \label{eq:shared-sample-increment}
 D_{k+1}=h(x_{k+1},\xi_{k+1})-h(x_k,\xi_{k+1}).
 \end{equation}
-Both evaluations use the \emph{same fresh sample}. SGD draws a fresh
-gradient estimate, MSGD averages it with the previous estimate, and TSGD
-adds an estimated gradient change from $x_k$ to $x_{k+1}$ to $g_k$,
-transporting it to the new iterate. Momentum averaging can reduce
-noise, but gradients from earlier iterates can make the estimate lag
-behind the current gradient, especially when the gradient changes rapidly.
-Transport accounts for this change but inherits the estimation error
-in $g_k$. Unless specified otherwise, SGD and MSGD initialize with
+MSGD averages fresh and past estimates to reduce noise, but can lag
+behind a changing gradient. TSGD accounts for the gradient change
+through transport.
+Unless specified otherwise, SGD and MSGD initialize with
 $g_0=h(x_0,\xi_0)$. TSGD permits any $g_0$ with finite mean-square
 error, including a biased estimate.
 
