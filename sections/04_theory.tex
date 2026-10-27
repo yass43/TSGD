@@ -37,6 +37,8 @@ For some $\delta\geq0$,
 \end{assumption}
 Assumptions~\ref{ass:unbiased-oracle} and \ref{ass:oracle-similarity}
 imply these two conditions for shared-sample gradient differences.
+The conditional similarity requirement may be weaker than global
+similarity because it concerns only the generated increments.
 Stating them directly on the increments also allows transport without
 a pointwise gradient oracle.
 
@@ -158,8 +160,9 @@ initialization using $B_0$ evaluations for TSGD.}
 The comparison reflects the different information the methods use:
 SGD's bound depends on noise magnitude, while TSGD's depends on noise
 variation and initial accuracy. Small $\delta$ can favor transport even
-when $\sigma$ is large. BV and global similarity do not imply one another
-(Appendix~\ref{app:noise-assumptions}), so these bounds apply under
+when $\sigma$ is large. Neither BV nor the more general ABC condition
+is comparable with global similarity
+(Appendix~\ref{subsec:comparing-assumptions}), so these bounds apply under
 different assumptions and do not establish universal superiority.
 
 \subsection{Computational Considerations}

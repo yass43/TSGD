@@ -134,6 +134,12 @@ extremes of this model: a constant feature ($\delta=0$) with label noise
 favors transport with accurate initialization, whereas noiseless labels
 ($s=0$) with varying features make fresh gradients exact at the minimizer.
 
+SGD can also be analyzed under the ABC condition, which generalizes BV
+\citep{khaled2023better}. Both constrain the stochastic gradient at
+each point separately; centered similarity instead constrains noise
+differences at two points under shared sampling.
+Appendix~\ref{subsec:comparing-assumptions} compares these conditions.
+
 \subsection{Two Fundamental Sources of TSGD Error}
 \label{subsec:martingale-interpretation}
 

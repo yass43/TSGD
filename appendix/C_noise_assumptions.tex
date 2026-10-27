@@ -2,30 +2,82 @@
 \section{Noise Assumptions}
 \label{app:noise-assumptions}
 
-\subsection{Bounded Variance and Similarity Are Incomparable}
+\subsection{Bounded Variance, ABC, and Centered Similarity}
 \label{subsec:comparing-assumptions}
 
 Write $h(x,\xi)=\nabla f(x)+r(x,\xi)$ with
-$\mathbb E_\xi[r(x,\xi)]=0$. BV bounds
-$\mathbb E_\xi[\|r(x,\xi)\|^2]$ uniformly in $x$, whereas global
-similarity bounds
-$\mathbb E_\xi[\|r(x,\xi)-r(y,\xi)\|^2]$ by
-$\delta^2\|x-y\|^2$. The latter is sufficient for the conditional
-trajectory condition in Assumption~\ref{ass:centered-similarity}
-when each coupled difference uses a fresh sample. The conditional
-condition may be weaker because it concerns only the generated
-increments. The counterexamples below compare the two global oracle
-conditions.
+$\mathbb E_\xi[r(x,\xi)]=0$.
 
-\paragraph{BV does not imply global similarity.}
-Take $f(x)=x^2/2$ and $h(x,\xi)=x+\xi\sin(x^2)$, where $\xi$
-takes the values $-1$ and $1$ with equal probability. The oracle is
+\paragraph{ABC generalizes BV.}
+BV requires the gradient-noise variance to be uniformly bounded over
+the domain. The more general ABC condition, introduced as expected
+smoothness by \citet{khaled2023better}, assumes that some
+$A,B,C\geq0$ satisfy
+\begin{equation}
+\label{eq:abc-assumption}
+\mathbb E_\xi[\|h(x,\xi)\|^2]
+\leq2A(f(x)-f_{\inf})+B\|\nabla f(x)\|^2+C
+\qquad\text{for all }x.
+\end{equation}
+Unbiasedness gives
+\[
+\mathbb E_\xi[\|h(x,\xi)\|^2]
+=\|\nabla f(x)\|^2+\mathbb E_\xi[\|r(x,\xi)\|^2].
+\]
+BV is the special case $(A,B,C)=(0,1,\sigma^2)$.
+ABC permits $\mathbb E_\xi[\|h(x,\xi)\|^2]$ to grow with
+$f(x)-f_{\inf}$ or $\|\nabla f(x)\|^2$.
+In particular, if $C=0$ and a sequence $(x_k)$ satisfies
+\[
+f(x_k)-f_{\inf}\to0
+\qquad\text{and}\qquad
+\|\nabla f(x_k)\|^2\to0,
+\]
+then ABC implies
+\[
+\mathbb E_\xi[\|h(x_k,\xi)\|^2]\to0.
+\]
+Thus the second-moment term in SGD's descent bound can vanish
+instead of being controlled by a fixed noise bound.
+
+For example, let $f(x)=x^2/2$ and $h(x,a)=ax$, where $a$ equals
+$0$ or $2$ with equal probability. Its residual is
+$r(x,a)=h(x,a)-\nabla f(x)=(a-1)x$, so
+\[
+\mathbb E[h(x,a)]=x,\qquad
+\mathbb E[|h(x,a)|^2]=2x^2,\qquad
+\mathbb E[|r(x,a)|^2]=x^2.
+\]
+Thus ABC holds with $(A,B,C)=(0,2,0)$, while global BV fails
+because $\mathbb E[|h(x,a)-\nabla f(x)|^2]=\mathbb E[|r(x,a)|^2]=x^2$ is unbounded as $|x|\to\infty$.
+As in Section~\ref{subsec:multiplicative-noise-comparison}, fresh
+gradients become exact at the minimizer despite unbounded noise
+variance over the domain.
+
+\paragraph{One-point and two-point conditions.}
+BV and ABC constrain the stochastic gradient at each point separately.
+Centered similarity instead constrains noise differences under shared
+sampling, and therefore depends on how the oracle couples two points.
+In Section~\ref{subsec:fixed-variance-variable-similarity}, the
+pointwise gradient distributions are unchanged as the frequency
+$\omega$ varies, while the smallest similarity constant is
+$\delta=\sigma\omega$. Thus the same pointwise distributions can
+coexist with arbitrarily different transport accuracy.
+
+The counterexamples below concern global oracle conditions
+and show that neither BV nor ABC implies centered similarity,
+while centered similarity implies neither BV nor ABC.
+
+\paragraph{Neither BV nor ABC implies global similarity.}
+Take $f(x)=x^2/2$ and $h(x,\xi)=x+\xi\sin(x^2)$, where
+$\mathbb P(\xi=-1)=\mathbb P(\xi=1)=1/2$. The oracle is
 unbiased and
 \[
 \mathbb E_\xi[|h(x,\xi)-\nabla f(x)|^2]
  =\sin^2(x^2)\leq1,
 \]
-so BV holds with $\sigma^2=1$. Under shared sampling,
+so BV holds with $\sigma^2=1$, and ABC holds with $(A,B,C)=(0,1,1)$.
+Under shared sampling,
 \[
 \mathbb E_\xi[|r(x,\xi)-r(y,\xi)|^2]
  =\bigl(\sin(x^2)-\sin(y^2)\bigr)^2.
@@ -40,10 +92,16 @@ A finite similarity constant would imply
  \leq\delta &&\text{for every }x.
 \end{aligned}
 \]
-But $x_n=\sqrt{2\pi n}$ gives
-$|2x_n\cos(x_n^2)|=2\sqrt{2\pi n}\to\infty$, a contradiction.
+However, at $x_n=\sqrt{2\pi n}$, $n\geq1$, this would require
+\[
+|2x_n\cos(x_n^2)|=2\sqrt{2\pi n}\leq\delta
+\qquad\text{for every }n.
+\]
+For any finite $\delta$, choosing an integer $n>\delta^2/(8\pi)$
+violates this inequality. Hence no finite global similarity constant
+exists.
 
-\paragraph{Global similarity does not imply BV.}
+\paragraph{Global similarity implies neither BV nor ABC.}
 Take $f(x)=\log\cosh x$ and
 $h(x,\xi)=\tanh x+\xi x$, with
 $\mathbb E[\xi]=0$ and $\mathbb E[\xi^2]=\delta^2>0$.
@@ -60,8 +118,22 @@ The unbiased oracle has residual $r(x,\xi)=\xi x$, and hence
 \mathbb E_\xi[|r(x,\xi)|^2]=\delta^2x^2.
 \]
 Similarity holds with equality, but no finite global BV constant
-exists. These examples establish incomparability of assumptions;
-they do not by themselves order the performance of SGD and TSGD.
+exists. Since $f_{\inf}=0$, ABC would require
+\[
+\tanh^2x+\delta^2x^2
+\leq2A\log\cosh x+B\tanh^2x+C
+\leq2A|x|+B+C
+\qquad\text{for all }x.
+\]
+For $x\neq0$, dividing by $x^2$ and dropping the nonnegative term
+$\tanh^2x/x^2$ gives
+\[
+\delta^2\leq\frac{2A}{|x|}+\frac{B+C}{x^2}.
+\]
+For any finite positive $A,B,C$, the right-hand side tends to zero as
+$|x|\to\infty$, whereas the left-hand side is the fixed positive
+constant $\delta^2$. The inequality therefore fails for sufficiently
+large $|x|$, so no finite ABC constants exist.
 
 \subsection{A TSGD Guarantee without Bounded Variance}
 \label{subsec:similarity-without-bv}
