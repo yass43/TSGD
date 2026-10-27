@@ -14,21 +14,24 @@
 \maketitle
 
 \begin{abstract}
-Stochastic gradient descent estimates gradients afresh. Transported SGD
-(TSGD) instead estimates gradient changes and uses them to transport an
-initial estimate along the optimization trajectory. This known recursion
-is a fundamental estimation mechanism, alongside fresh estimation and
-momentum averaging, and is already embedded in many modern optimizers.
-Its advantage arises when stochastic gradient differences are accurate
-even though individual gradients are noisy. We explain this distinction
-through centered similarity, which measures noise variation rather than
-pointwise noise magnitude. Exact examples and a controlled numerical
-experiment reveal regimes favoring transport or fresh gradients. A
-finite-horizon convergence guarantee separates optimization, transport,
-and initialization contributions, while exact quadratic dynamics show
-how inherited and accumulated errors can prevent stationarity. These
-results provide a unified view of transport and its combination with
-refreshing and averaging in modern stochastic optimization.
+Stochastic gradient descent (SGD) estimates gradients. Transported SGD
+(TSGD) estimates their changes and uses them to update an initial gradient
+estimate along the optimization trajectory. Estimating changes can be
+much easier than estimating gradients: even when individual gradients
+are highly noisy, shared additive noise cancels exactly from their
+differences, giving exact transport. With exact initialization as well,
+TSGD follows gradient descent exactly, regardless of the noise magnitude.
+This known recursion appears in several variance-reduced methods; here
+we study it directly as a fundamental estimation mechanism.
+Its accuracy depends on two error sources: initialization error,
+which persists, and transport errors, which accumulate. Centered
+similarity controls the latter through noise variation rather than
+pointwise noise magnitude. We give a clean, unified convergence analysis
+that separates these contributions, and derive exact quadratic dynamics
+showing how the estimator can vanish while the true gradient does not.
+Simple examples and a controlled numerical experiment identify regimes
+favoring TSGD or SGD. These results clarify both the value of pure
+transport and why modern optimizers combine it with fresh estimation.
 \end{abstract}
 
 \input{sections/01_introduction}
