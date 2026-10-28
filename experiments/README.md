@@ -81,7 +81,7 @@ Increase `--runs` to reduce Monte Carlo uncertainty; do not select seeds for fav
 
 Outputs in `results/` (or `--output PATH`):
 
-- `least_squares.pdf` and `.png`: four-panel figure.
+- `least_squares_A.pdf` / `.png` through `least_squares_D.pdf` / `.png`: four independent plots, each with one legend and no explanatory footer or inset.
 - `curves.csv`: every iteration's true-gradient, estimator, and tracking-error
   squared norms, their Monte Carlo standard errors, and exact expectations.
 - `settings_and_summary.json`: parameters, software versions, initialization
@@ -98,21 +98,19 @@ python plot_least_squares.py --run-dir results/cluster/full_54712913 --max-iter 
 python plot_least_squares.py --run-dir results/cluster/full_54712913 --full-horizon
 ```
 
-The command reads only the saved CSV/JSON and writes new PDF/PNG figures plus
+The command reads only the saved CSV/JSON and writes four separate PDF/PNG figures plus
 `caption.txt` in the run's `replot/` subfolder. Original figures and raw results
 are preserved by default. `--output PATH` selects another figure directory.
 No Slurm job or new Monte Carlo run is needed. Default display: iterations 0–80;
 the vertical limits are fitted to the visible data, not the entire trajectory.
-`--no-inset` hides A's diagnostic; `--no-bands` hides uncertainty shading.
+`--no-bands` hides uncertainty shading. Existing combined figures from earlier
+versions are left untouched; open the new `least_squares_A` through `least_squares_D` files.
 
-Presentation updates: A lists expected initialization errors; B uses SGD markers
-and a dashed TSGD estimator, with a squared-norm axis and direct labels; C identifies
-the transport-noise residual at nonzero delta; D separates similarity and
-initialization legend keys. The sampled/controlled distinction stays in the caption.
-The A inset uses exact model moments along the B0=128 TSGD trajectory distribution:
-fresh single-sample oracle MSE is `delta^2 G_k + s^2 trace(H)`; the next increment's
-error MSE is `eta^2 delta^2 sum_i lambda_i^2 E[g_{k,i}^2]`.
-These are oracle errors, not tracking errors or equal-cost comparisons.
+Plots contain only curves, axes, short titles, and one legend each. A identifies
+initial batches; B distinguishes SGD markers from the dashed TSGD estimator;
+C groups the coincident transport curves; D lists the four (delta, E0) combinations.
+The sampled/controlled distinction and interpretation of C's transport-noise
+residual remain in the notebook and separate `caption.txt`, not inside the images.
 
 New simulation jobs automatically use this renderer. `--plot-max-iter` changes
 only the figure horizon, never the number of simulated or saved iterations.

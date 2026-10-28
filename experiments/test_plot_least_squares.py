@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from least_squares import scenarios, problem, simulate, initial_variance
-from plot_least_squares import draw_panel, oracle_error_curves, visible_rows
+from plot_least_squares import draw_panel, oracle_error_curves, visible_rows, make_figure
+from matplotlib.legend import Legend
 
 
 class PlotTests(unittest.TestCase):
@@ -53,7 +54,18 @@ class PlotTests(unittest.TestCase):
         self.assertEqual(lines["SGD true gradient"].get_linestyle(), "None")
         self.assertEqual(lines["TSGD estimator"].get_linestyle(), "--")
 
-    def test_inset_increment_error_matches_tracking_error_accumulation(self):
+    def test_each_figure_has_one_axis_one_legend_no_comments(self):
+        for panel in "ABCD":
+            fig = make_figure(self.series, self.settings, panel)
+            self.assertEqual(len(fig.axes), 1)
+            self.assertEqual(len(fig.texts), 0)
+            ax = fig.axes[0]
+            self.assertEqual(len(ax.texts), 0)
+            self.assertEqual(len(ax.child_axes), 0)
+            legends = [child for child in ax.get_children() if isinstance(child, Legend)]
+            self.assertEqual(len(legends), 1)
+
+    def test_increment_error_matches_tracking_error_accumulation(self):
         s = next(s for s in self.settings["scenarios"] if s["name"] == "TSGD B0=128" and s["panel"] == "A")
         rows = self.series[("A", s["name"])]
         k, fresh, difference = oracle_error_curves(rows, s, self.settings)

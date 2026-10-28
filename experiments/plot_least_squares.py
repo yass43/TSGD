@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import numpy as np
 
 
@@ -89,7 +88,7 @@ def _line(ax, rows, label, color, style="-", metric="gradient", marker=None,
 
 
 def draw_panel(ax, panel, series, settings, max_iter=80, metric="gradient",
-               exact=False, bands=True, inset=True):
+               exact=False, bands=True):
     if panel not in TITLES or metric not in ("gradient", "estimator", "tracking"):
         raise ValueError("Unknown panel or metric")
     specs = [s for s in settings["scenarios"] if s["panel"] == panel]
@@ -102,7 +101,7 @@ def draw_panel(ax, panel, series, settings, max_iter=80, metric="gradient",
         label = s["name"]
         zorder = 2
         if panel == "A" and s["method"] == "TSGD":
-            label = rf"TSGD $B_0={s['batch']}$, $E_0={s['expected_E0']:.3g}$"
+            label = rf"TSGD $B_0={s['batch']}$"
         elif panel == "B":
             label = "SGD true gradient" if s["method"] == "SGD" else "TSGD true gradient"
             if metric != "gradient":
@@ -122,28 +121,11 @@ def draw_panel(ax, panel, series, settings, max_iter=80, metric="gradient",
         elif panel == "D":
             color = [COLORS[2], COLORS[1]][deltas.index(s["kappa"]) % 2]
             style = ["-", "--"][errors.index(s["initial_mse"]) % 2]
-            label = "_nolegend_"
+            label = rf"$\delta={s['kappa']:g},\ E_0={s['initial_mse']:g}$"
         _line(ax, rows, label, color, style, metric, marker, offset, bands, exact, zorder)
         if panel == "B" and metric == "gradient" and s["method"] == "TSGD":
             _line(ax, rows, "TSGD estimator", color, "--", "estimator", bands=bands, exact=exact)
-            at = rows[min(len(rows)-1, max(1, int(.7*len(rows))))]
-            for field, text, shift in (("gradient_mean", "true gradient", 9),
-                                       ("estimator_mean", "estimator", -17)):
-                ax.annotate(text, (at["iteration"], max(at[field], 1e-300)),
-                            xytext=(0, shift), textcoords="offset points", color=color,
-                            fontsize=9, bbox={"facecolor": "white", "alpha": .8, "edgecolor": "none"})
-    if panel == "D":
-        delta_keys = [Line2D([], [], color=[COLORS[2], COLORS[1]][i % 2], lw=2,
-                             label=rf"$\delta={value:g}$") for i, value in enumerate(deltas)]
-        error_keys = [Line2D([], [], color=".25", ls=["-", "--"][i % 2], lw=2,
-                             label=rf"$E_0={value:g}$") for i, value in enumerate(errors)]
-        legend = ax.legend(handles=delta_keys, title="Similarity", fontsize=8, title_fontsize=9,
-                           loc="upper right")
-        ax.add_artist(legend)
-        ax.legend(handles=error_keys, title="Initialization", fontsize=8, title_fontsize=9,
-                  loc="center right")
-    else:
-        ax.legend(fontsize=8, loc="upper right" if panel == "A" else "lower left")
+    ax.legend(fontsize=9, loc="best", framealpha=.9)
     ax.set_yscale("log")
     ax.set_xlim(0, horizon)
     ax.set_xlabel("Iteration k")
@@ -155,28 +137,7 @@ def draw_panel(ax, panel, series, settings, max_iter=80, metric="gradient",
     ax.set_ylabel(ylabel)
     ax.set_title(f"{panel}  {TITLES[panel]}", loc="left", fontsize=12)
     ax.grid(True, which="major", alpha=.18)
-    if panel == "C":
-        if metric == "gradient":
-            _, transport_rows = next((s, r) for s, r in groups if s["method"] == "TSGD")
-            at = transport_rows[int(.8*(len(transport_rows)-1))]
-            ax.annotate(rf"$\delta={specs[0]['kappa']:g}$: transport-noise residual",
-                        (at["iteration"], max(at["gradient_mean"], 1e-300)),
-                        xytext=(.43, .40), textcoords="axes fraction", fontsize=8,
-                        color=COLORS[2], arrowprops={"arrowstyle": "->", "color": COLORS[2]},
-                        bbox={"facecolor": "white", "alpha": .85, "edgecolor": "none"})
-    if panel == "A" and metric == "gradient" and inset:
-        chosen, rows = next(((s, r) for s, r in groups if s["method"] == "TSGD" and s["batch"] == 128),
-                            next((s, r) for s, r in groups if s["method"] == "TSGD"))
-        inner = ax.inset_axes([.52, .32, .45, .30])
-        k, fresh, difference = oracle_error_curves(rows, chosen, settings)
-        inner.plot(k, _positive(fresh), color=COLORS[0], label="Fresh gradient")
-        inner.plot(k, _positive(difference), color=COLORS[2], label="Gradient difference")
-        inner.set_yscale("log")
-        inner.set_xlim(0, horizon)
-        inner.tick_params(labelsize=6)
-        inner.set_title(rf"Oracle MSE along TSGD ($B_0={chosen['batch']}$)", fontsize=7)
-        inner.legend(fontsize=6, loc="center right", framealpha=.85)
-        inner.grid(alpha=.12)
+
 
 
 def caption(settings, max_iter=80):
@@ -184,30 +145,31 @@ def caption(settings, max_iter=80):
     return (
         f"A–B: sampled initialization; C–D: controlled initialization. Common stepsize eta={settings['eta']:g}; "
         f"first {horizon} of {settings['steps']} iterations shown.\n"
-        "Shading: mean +/- 2 pointwise Monte Carlo standard errors. These are mechanism illustrations, not cost comparisons.\n"
-        "A inset: exact single-sample fresh-gradient and gradient-difference error moments along the same TSGD trajectory distribution."
+        "Shading: mean +/- 2 pointwise Monte Carlo standard errors. These are mechanism illustrations, not cost comparisons."
     )
 
 
-def make_figure(series, settings, max_iter=80, exact=False, bands=True, inset=True):
-    plt.rcParams.update({"font.size": 10, "axes.spines.top": False,
+def make_figure(series, settings, panel, max_iter=80, exact=False, bands=True):
+    """One standalone plot with one legend, no inset or explanatory annotations."""
+    plt.rcParams.update({"font.size": 11, "axes.spines.top": False,
                          "axes.spines.right": False, "pdf.fonttype": 42})
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8.3))
-    for panel, ax in zip("ABCD", axes.flat):
-        draw_panel(ax, panel, series, settings, max_iter, exact=exact, bands=bands, inset=inset)
-    fig.tight_layout(rect=(0, .105, 1, 1), h_pad=2.2, w_pad=2)
-    fig.text(.06, .025, caption(settings, max_iter), fontsize=8, va="bottom", linespacing=1.5)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    draw_panel(ax, panel, series, settings, max_iter, exact=exact, bands=bands)
+    fig.tight_layout()
     return fig
 
 
-def save_figure(series, settings, output, max_iter=80, exact=False, bands=True, inset=True):
+def save_figure(series, settings, output, max_iter=80, exact=False, bands=True):
+    """Save four separate PDF/PNG files. Context remains in a text file, not images."""
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
-    fig = make_figure(series, settings, max_iter, exact, bands, inset)
-    fig.savefig(output / "least_squares.pdf")
-    fig.savefig(output / "least_squares.png", dpi=200)
-    plt.close(fig)
+    for panel in "ABCD":
+        fig = make_figure(series, settings, panel, max_iter, exact, bands)
+        fig.savefig(output / f"least_squares_{panel}.pdf")
+        fig.savefig(output / f"least_squares_{panel}.png", dpi=200)
+        plt.close(fig)
     (output / "caption.txt").write_text(caption(settings, max_iter)+"\n", encoding="utf-8")
+
 
 
 def main():
@@ -218,7 +180,6 @@ def main():
     parser.add_argument("--full-horizon", action="store_true")
     parser.add_argument("--exact", action="store_true", help="Overlay dotted exact finite-time expectations")
     parser.add_argument("--no-bands", action="store_true")
-    parser.add_argument("--no-inset", action="store_true")
     args = parser.parse_args()
     if args.max_iter < 1:
         parser.error("--max-iter must be positive")
@@ -226,7 +187,7 @@ def main():
     series, settings = load_results(args.run_dir)
     output = args.output or args.run_dir / "replot"
     save_figure(series, settings, output, None if args.full_horizon else args.max_iter,
-                args.exact, not args.no_bands, not args.no_inset)
+                args.exact, not args.no_bands)
     print(f"Replotted saved data in {output.resolve()}; no simulations were run.")
 
 
