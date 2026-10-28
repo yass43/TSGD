@@ -87,6 +87,36 @@ Outputs in `results/` (or `--output PATH`):
 - `settings_and_summary.json`: parameters, software versions, initialization
   assumptions, exact limiting errors, and cancellation-check discrepancy.
 
+## Inspect a completed run in a notebook
+
+Open `inspect_results.ipynb` in Jupyter or VS Code, select the existing
+`FL_EF21_ENV` kernel, and run the cells in order. The first cell selects
+`results/cluster/full_54712913` by default. Edit `RUN_DIR` there for another
+job or a downloaded local results directory. It lists available runs and
+fails explicitly if the selected run is missing; it does not silently show
+another experiment.
+
+The notebook displays the original figure, each panel separately, sampled
+initialization errors, the false-convergence diagnostics, cancellation checks,
+and exact finite-time/asymptotic comparisons. Set `SHOW_EXACT`, `SHOW_BANDS`,
+and `MAX_ITER` to inspect details. It reads the CSV/JSON and never reruns the
+experiment, submits jobs, or overwrites results. No pandas or widget packages
+are required beyond an existing notebook frontend/kernel and NumPy/Matplotlib.
+
+On the cluster, the confirmed environment is
+`/ibex/user/maziany/conda-environments/FL_EF21_ENV` (job 54712913 used
+NumPy 2.4.3 and Matplotlib 3.10.9). If your notebook frontend does not list it,
+register its kernel from an activated environment, assuming `ipykernel` is installed:
+
+```bash
+conda activate /ibex/user/maziany/conda-environments/FL_EF21_ENV
+python -m ipykernel install --user --name FL_EF21_ENV --display-name "Python (FL_EF21_ENV)"
+```
+
+No kernel installation is performed automatically. To inspect locally,
+copy the completed result folder and select a local Python notebook kernel;
+the analysis does not require access to the remote environment.
+
 ## Model
 
 We use **vector-response** least squares, not ordinary one-label regression:
