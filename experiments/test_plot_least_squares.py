@@ -60,6 +60,8 @@ class PlotTests(unittest.TestCase):
             self.assertEqual(len(fig.axes), 1)
             self.assertEqual(len(fig.texts), 0)
             ax = fig.axes[0]
+            self.assertEqual(ax.get_title(), "")
+            self.assertEqual(ax.get_title(loc="left"), "")
             self.assertEqual(len(ax.texts), 0)
             self.assertEqual(len(ax.child_axes), 0)
             legends = [child for child in ax.get_children() if isinstance(child, Legend)]

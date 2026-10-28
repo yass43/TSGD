@@ -135,7 +135,6 @@ def draw_panel(ax, panel, series, settings, max_iter=80, metric="gradient",
     if panel == "B" and metric == "gradient":
         ylabel = "Expected squared norm"
     ax.set_ylabel(ylabel)
-    ax.set_title(f"{panel}  {TITLES[panel]}", loc="left", fontsize=12)
     ax.grid(True, which="major", alpha=.18)
 
 

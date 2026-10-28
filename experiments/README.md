@@ -106,7 +106,7 @@ the vertical limits are fitted to the visible data, not the entire trajectory.
 `--no-bands` hides uncertainty shading. Existing combined figures from earlier
 versions are left untouched; open the new `least_squares_A` through `least_squares_D` files.
 
-Plots contain only curves, axes, short titles, and one legend each. A identifies
+Plots contain only curves, axes, and one legend each, with no titles. A identifies
 initial batches; B distinguishes SGD markers from the dashed TSGD estimator;
 C groups the coincident transport curves; D lists the four (delta, E0) combinations.
 The sampled/controlled distinction and interpretation of C's transport-noise
