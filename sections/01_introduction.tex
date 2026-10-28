@@ -32,14 +32,14 @@ the noise varies between the coupled evaluations along the trajectory.
 Centered $\delta$-similarity quantifies this variation: small $\delta$
 means that stochastic gradient changes closely match deterministic
 gradient changes. Thus, transport can remain accurate even when
-pointwise noise is large. This condition applies to population
-objectives and not only to finite-sum objectives.
+pointwise noise is large. We stress that centered similarity applies
+to population objectives as well as finite sums.
 
-Transport nevertheless has two fundamental error sources.
-Initialization error persists, while errors in subsequent gradient
-changes accumulate. Accurate differences preserve a good initial
-estimate, but cannot correct an inaccurate one. Even exact
-initialization does not prevent later transport errors from accumulating.
+Two sources of error determine TSGD's accuracy: error in the initial
+gradient estimate and error in the estimated gradient changes.
+The initial error persists; new transport errors accumulate along the
+trajectory. Accurate differences preserve a good initial
+estimate, but cannot correct an inaccurate one.
 The TSGD guarantee therefore depends on both $\delta$ and the accuracy
 of the initial estimate. At fixed values of these quantities, it is
 independent of $\sigma$, although the noise magnitude can affect the
@@ -49,8 +49,7 @@ Least-squares regression provides a concrete example. Label noise
 enters the stochastic gradient $u(u^\top x-b)$, but cancels from the
 shared-sample difference $uu^\top(x-y)$. It therefore affects fresh
 gradient estimates and TSGD's initialization, but not its subsequent
-transport increments. Feature variability can still make those
-increments noisy (Section~\ref{subsec:understanding-similarity}).
+transport increments (Section~\ref{subsec:understanding-similarity}).
 
 The transport recursion is not new. It appears in established
 variance-reduced algorithms such as SARAH, SPIDER, and PAGE
@@ -79,15 +78,16 @@ initialization and transport errors, and give a finite-horizon guarantee
 under conditional assumptions on the gradient change increments.
 Exact quadratic dynamics quantify their interaction and show how the
 estimator can vanish while the true gradient does not.
-\item \textbf{Comparison and connections.} Simple examples identify
-regimes favoring TSGD or SGD. A controlled experiment varies noise
-similarity while preserving pointwise gradient distributions.
-We compare convergence guarantees and oracle costs, and discuss
-why modern optimizers typically combine transport with fresh estimation
-and momentum averaging.
+\item \textbf{Comparison and connections.} We construct oracles with
+identical pointwise gradient distributions but different transport
+accuracy, and give exact examples showing when SGD or TSGD has the
+smaller stationarity error. Least-squares experiments illustrate these
+regimes and the effect of initialization. We compare convergence
+guarantees and oracle costs, and identify how established optimizers
+combine transport with fresh estimation and momentum averaging.
 \end{itemize}
 The examples precede the convergence analysis so that the role of each
 assumption is visible before the theorem. Detailed proofs and additional
-calculations are collected in the appendices.
+calculations appear in the appendices.
 
 \input{figures/fundamental_estimators}

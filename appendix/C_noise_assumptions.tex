@@ -185,9 +185,15 @@ evidence that SGD cannot converge.
 \label{app:quadratic-similarity}
 
 For $f_i(x)=\tfrac12x^\top A_ix+b_i^\top x+c_i$ with symmetric
-$A_i$, let $f=n^{-1}\sum_i f_i$, $\bar A=n^{-1}\sum_i A_i$, and
-sample $i$ uniformly. By \eqref{eq:quadratic-difference-noise},
-the centered difference is $(A_i-\bar A)(x-y)$. For $z=x-y$,
+$A_i$, let $f=\frac1n\sum_{i=1}^n f_i$,
+$\bar A=\frac1n\sum_{i=1}^n A_i$, and sample $i$ uniformly.
+The centered gradient difference is
+\begin{equation}
+\label{eq:quadratic-difference-noise}
+[\nabla f_i(x)-\nabla f_i(y)]-[\nabla f(x)-\nabla f(y)]
+=(A_i-\bar A)(x-y).
+\end{equation}
+For $z=x-y$,
 \[
 \mathbb E_i[\|(A_i-\bar A)z\|^2]
  =z^\top\!\left(\frac1n\sum_{i=1}^n(A_i-\bar A)^2\right)z.

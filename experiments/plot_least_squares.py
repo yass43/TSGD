@@ -123,6 +123,10 @@ def draw_panel(ax, panel, series, settings, max_iter=80, metric="gradient",
             style = ["-", "--"][errors.index(s["initial_mse"]) % 2]
             label = rf"$\delta={s['kappa']:g},\ E_0={s['initial_mse']:g}$"
         _line(ax, rows, label, color, style, metric, marker, offset, bands, exact, zorder)
+        if panel == "D" and metric == "gradient":
+            limit = s["limiting_gradient_exact"]
+            ax.axhline(limit, color=color, ls=":", lw=1.2, alpha=.9,
+                       label="_nolegend_", zorder=1)
         if panel == "B" and metric == "gradient" and s["method"] == "TSGD":
             _line(ax, rows, "TSGD estimator", color, "--", "estimator", bands=bands, exact=exact)
     ax.legend(fontsize=9, loc="best", framealpha=.9)

@@ -5,14 +5,14 @@
 \subsection{SGD, MSGD, and TSGD}
 \label{subsec:algorithms-and-assumptions}
 
-How should we construct an estimate of $\nabla f(x_{k+1})$?
-The identity
+After taking a step to $x_{k+1}$, we need a gradient estimate to
+determine the next update. The identity
 \[
 \nabla f(x_{k+1})
 =\nabla f(x_k)+\bigl[\nabla f(x_{k+1})-\nabla f(x_k)\bigr]
 \]
-suggests two approaches. SGD estimates the left-hand side directly,
-drawing a fresh stochastic gradient at the new point. TSGD estimates
+suggests two approaches. SGD estimates the left-hand side directly
+by drawing a fresh stochastic gradient at the new point. TSGD estimates
 the right-hand side: its current estimate $g_k$ already approximates
 the first term, so it needs new information only for the change.
 Using a stochastic gradient oracle $h$ with the same fresh sample
@@ -33,8 +33,13 @@ errors is examined in Section~\ref{subsec:martingale-interpretation}.
 We formalize the setup as follows.
 \begin{assumption}[Smooth, lower-bounded objective]
 \label{ass:smooth-objective}
-The function $f:\mathbb R^d\to\mathbb R$ has an $L$-Lipschitz gradient,
-with $L>0$, and $f_{\inf}:=\inf_x f(x)>-\infty$.
+The function $f:\mathbb R^d\to\mathbb R$ is lower bounded,
+$f_{\inf}:=\inf_x f(x)>-\infty$, and has an $L$-Lipschitz gradient
+with $L>0$:
+\[
+\|\nabla f(x)-\nabla f(y)\|\leq L\|x-y\|
+\qquad\text{for all }x,y\in\mathbb R^d.
+\]
 \end{assumption}
 \begin{assumption}[Unbiased stochastic gradients]
 \label{ass:unbiased-oracle}
@@ -63,8 +68,9 @@ In the standard pointwise-oracle construction,
 \label{eq:shared-sample-increment}
 D_{k+1}=h(x_{k+1},\xi_{k+1})-h(x_k,\xi_{k+1}).
 \end{equation}
-MSGD averages fresh and past estimates to reduce noise, but can lag
-behind a changing gradient. TSGD accounts for the gradient change
+SGD replaces its estimate with a fresh stochastic gradient at every
+iteration. MSGD averages fresh and past estimates to reduce noise, but
+can lag behind a changing gradient. TSGD accounts for the gradient change
 through transport.
 Unless specified otherwise, SGD and MSGD initialize with
 $g_0=h(x_0,\xi_0)$. TSGD permits any $g_0$ with finite mean-square
@@ -73,6 +79,7 @@ error, including a biased estimate.
 \subsection{Understanding Similarity}
 \label{subsec:understanding-similarity}
 
+SGD is typically analyzed under a bounded-variance assumption.
 Write $r(x,\xi)=h(x,\xi)-\nabla f(x)$ for the gradient noise.
 \begin{assumption}[Bounded variance (BV)]
 \label{ass:bounded-variance}
@@ -111,21 +118,13 @@ gradient differences; it does not require the gradients themselves, or
 their changes, to be small. Similarity is a condition on the stochastic
 oracle and applies to both finite-sum and population objectives.
 
-For an illustration, let $f=n^{-1}\sum_i f_i$ with
-$f_i(x)=\tfrac12x^\top A_i x+b_i^\top x+c_i$ and symmetric $A_i$.
-Uniformly sampling $i$, and writing $\bar A=n^{-1}\sum_i A_i$, gives
-\begin{equation}
-\label{eq:quadratic-difference-noise}
-[\nabla f_i(x)-\nabla f_i(y)]-[\nabla f(x)-\nabla f(y)]
-=(A_i-\bar A)(x-y).
-\end{equation}
-The linear terms $b_i^\top x$ cancel from the gradient differences.
-Components can therefore have very different
-gradients but nearly identical gradient changes. Identical Hessians give
-exact transport even with arbitrarily large additive gradient noise.
-Hessian heterogeneity controls $\delta$, whereas $L$ concerns the average
-Hessian; neither must be smaller than the other
-(Appendix~\ref{app:noise-assumptions}).
+For a finite sum $f=\frac1n\sum_{i=1}^n f_i$ with quadratic components
+$f_i(x)=\tfrac12x^\top A_i x+b_i^\top x+c_i$ and symmetric $A_i$, the linear terms
+$b_i^\top x$ cancel from gradient differences, so identical Hessians
+give exact transport even when individual gradients differ greatly.
+Hessian variation controls $\delta$, whereas $L$ concerns the average
+Hessian; neither must be smaller than the other.
+Appendix~\ref{app:quadratic-similarity} gives the calculation.
 
 Scalar least squares separates the two quantities. Let
 $f(x)=\tfrac12\mathbb E[(ux-b)^2]$, with feature $u$ satisfying
@@ -143,17 +142,14 @@ h(x;u,\varepsilon)-h(y;u,\varepsilon)&=u^2(x-y),\\
 \end{aligned}
 \end{equation}
 where $\delta^2=\operatorname{Var}(u^2)$ and $L=\mathbb E[u^2]$.
-The two terms play different roles. Label noise contributes to the noise
-magnitude but cancels from differences, while feature variability sets
-$\delta$. Increasing $s$ therefore makes every fresh gradient noisier
-without affecting transport. When $\delta>0$, the pointwise noise
-variance is unbounded in $x$, so similarity holds but global BV fails.
-Label noise still affects TSGD through its initial estimate, but not
-through later transport increments. Sections~\ref{subsec:additive-noise-comparison}
-and~\ref{subsec:multiplicative-noise-comparison} illustrate the two
-extremes of this model: a constant feature ($\delta=0$) with label noise
-favors transport with accurate initialization, whereas noiseless labels
-($s=0$) with varying features make fresh gradients exact at the minimizer.
+Label noise increases the variance of fresh gradients but cancels from
+differences; feature variability sets $\delta$. Increasing $s$ therefore
+affects TSGD's sampled initialization but not its later increments.
+When $\delta>0$, the pointwise noise variance is unbounded in $x$,
+so similarity holds but global BV fails.
+Sections~\ref{subsec:additive-noise-comparison}
+and~\ref{subsec:multiplicative-noise-comparison} illustrate the regimes
+of exact transport ($\delta=0$) and noiseless labels ($s=0$), respectively.
 
 SGD can also be analyzed under the ABC condition, which generalizes BV
 \citep{khaled2023better}. Both constrain the stochastic gradient at
@@ -164,6 +160,8 @@ Appendix~\ref{subsec:comparing-assumptions} compares these conditions.
 \subsection{Two Fundamental Sources of TSGD Error}
 \label{subsec:martingale-interpretation}
 
+The introduction identified two sources of TSGD error: initialization
+and transport. We now make this decomposition precise.
 Define $e_k=g_k-\nabla f(x_k)$, $E_k=\mathbb E[\|e_k\|^2]$, and
 $d_{k+1}=D_{k+1}-[\nabla f(x_{k+1})-\nabla f(x_k)]$.
 The transport update gives

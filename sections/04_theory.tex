@@ -100,6 +100,8 @@ The TSGD bound does not explicitly depend on $\sigma$, but this
 dependence may enter through $E_0$. For example, initializing $g_0$
 by averaging $B_0$ independent unbiased stochastic gradients at $x_0$
 gives $E_0\leq\sigma^2/B_0$ under bounded variance.
+Figure~\ref{fig:ls-init} illustrates how a more accurate sampled initial
+estimate lowers TSGD's residual error.
 Thus, TSGD's sensitivity to gradient-noise magnitude depends on how
 its initial estimate is constructed.
 

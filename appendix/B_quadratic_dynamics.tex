@@ -103,7 +103,7 @@ $\|\nabla f(x_k)\|^2\to\|e_0\|^2$.
 This additional lower bound is required for the pathwise asymptotic
 claim, not for \eqref{eq:exact-transport-inexact-init-bound}.
 
-The informational obstruction is that
+Indeed, adding a linear term does not change gradient differences:
 \[
 f_c(x):=f(x)+\langle c,x\rangle
 \quad\Longrightarrow\quad
@@ -259,3 +259,49 @@ In Table~\ref{tab:four-error-regimes}, the four corresponding limiting
 stationarity errors are respectively $0$, $A\lambda^2x_0^2$,
 $E_0$, and $E_0+AM_0$. The exact-transport identities are general;
 these stochastic-transport formulas rely on the quadratic model.
+
+\subsection{Numerical Check on Least Squares}
+\label{app:quad-numerics}
+
+The least-squares experiments in Appendix~\ref{app:ls} use a diagonal
+quadratic with eigenvalues $\lambda_j$. In each coordinate, the shared
+feature multiplier gives the quadratic recursion above with
+$a_{j,k}=(v_k-1)\lambda_j$; the additive label-noise term cancels from
+every transport increment. Thus each coordinate has the same moment
+recursions as in \eqref{eq:quadratic-moment-recursions}, with
+$\delta_j^2=\kappa^2\lambda_j^2$.
+
+For a centered initialization error with
+$\mathbb E[e_{0,j}^2]=E_0/d$, define
+\[
+\rho_j=(1-\eta\lambda_j)^2+\eta^2\kappa^2\lambda_j^2,
+\qquad
+A_j=\frac{\eta\kappa^2\lambda_j}
+ {2-\eta(1+\kappa^2)\lambda_j}.
+\]
+When $\rho_j<1$, the coordinatewise result
+\eqref{eq:quadratic-interaction} gives
+\begin{equation}
+\label{eq:least-squares-residual}
+\lim_{k\to\infty}\mathbb E\|\nabla f(x_k)\|^2
+=E_0+\sum_{j=1}^d A_j
+  \left(\lambda_j^2x_{0,j}^2+\frac{E_0}{d}\right).
+\end{equation}
+The figure checks these limits for $d=10$, $\eta=1/2$,
+$\lambda_j\in\{0.1,0.2,\ldots,1\}$, and
+$\kappa\in\{0.05,0.9\}$. Since $L=\max_j\lambda_j=1$, the global
+centered-similarity constant is $\delta=\kappa$. The dotted lines in
+Figure~\ref{fig:ls-errors} show the exact limits in
+\eqref{eq:least-squares-residual}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.72\linewidth]{figures/least_squares_D.pdf}
+  \caption{Initialization and transport errors on vector least squares.
+  Each curve uses one of $\delta\in\{0.05,0.9\}$ and
+  $E_0\in\{10^{-3},10^{-1}\}$; dotted lines are the exact limiting
+  stationarity errors in \eqref{eq:least-squares-residual}. Means over
+  4,000 trajectories with pointwise bands of $\pm2$ standard errors.}
+  \label{fig:ls-errors}
+\end{figure}
+\clearpage

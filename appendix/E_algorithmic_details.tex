@@ -97,7 +97,7 @@ $p=1$ gives minibatch SGD. For $0<p<1$, refreshing mitigates persistent
 initialization error and accumulated transport errors.
 
 MARINA uses the same probabilistic choice in distributed optimization
-\citep{gorbunov2021marina}. For $f=n^{-1}\sum_i f_i$, the refresh branch
+\citep{gorbunov2021marina}. For $f=\frac1n\sum_{i=1}^n f_i$, the refresh branch
 computes $H_{k+1}=\nabla f(x_{k+1})$ and the transport branch uses
 compressed local gradient differences:
 \begin{equation}

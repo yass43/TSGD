@@ -69,8 +69,8 @@ batch sizes, stepsizes, and iterate updates belong to each algorithm.}
 SVRG \citep{NIPS2013_ac1dd209} and SAGA
 \citep{defazio2014sagafastincrementalgradient} also use stochastic
 gradient differences to reduce variance. SVRG compares component
-gradients at the current iterate and a reference point held fixed
-within each epoch, adding the full gradient at that reference point.
+gradients at the current iterate and an anchor point held fixed
+within each epoch, adding the full gradient at that anchor point.
 SAGA instead stores past gradients for individual components and
 combines the sampled component's gradient difference with the average
 of the stored gradients, updating one entry at each iteration.
@@ -139,10 +139,10 @@ then cost much less. SARAH, SPIDER, and PAGE preserve information from
 an expensive gradient estimate through many cheaper transport steps.
 Refreshing more often limits accumulated error but reduces this saving.
 
-\emph{Complementary strengths.} Momentum averages noisy information
-from previous iterations, but those gradients were evaluated at points
-the iterate has already left. Transport accounts for the change in
-the true gradient, reducing tracking lag while retaining the benefit
+\emph{Complementary strengths.} Momentum averages past gradient
+estimates to reduce noise, but its estimate can lag behind the current
+gradient, especially when the gradient changes rapidly. Transport
+accounts for the change in the true gradient, reducing tracking lag while retaining the benefit
 of averaging. Fresh gradients supply absolute information that pure
 transport cannot recover: mixing them in damps initialization and
 accumulated transport errors, while introducing new pointwise noise.
@@ -162,11 +162,12 @@ vanishes near the minimizer, while pure transport can retain a nonzero
 tracking error. Thus the balance can change as iterates move, steps
 shrink, and errors accumulate.
 
-Mixing weights and refresh frequency determine how much an optimizer
-relies on each mechanism. Fixed choices provide a compromise, while
-adapting them can respond to changing conditions. The balance matters:
-combining estimators does not automatically improve convergence, and
-a poor choice can perform worse than using one estimator alone.
+Accurate gradient differences can preserve a reliable estimate for many
+iterations. As tracking error accumulates, fresh gradients can help
+correct it. Choosing the mixing weights or refresh frequency means
+balancing this benefit against the cost and noise of fresh estimation.
+The difficulty is that these estimation errors are generally unknown
+during a run.
 
 \paragraph{Improved complexity through refreshing.}
 When bounded variance and centered similarity hold together, combining
@@ -194,4 +195,3 @@ same problem class; Appendix~\ref{app:common-class-lower-bound} gives the
 precise statement. The comparison shows
 how combining the mechanisms can improve a guarantee; it does not
 establish an $\Omega(\varepsilon^{-4})$ lower bound for pure TSGD.
-Pure TSGD can already converge faster when transport is exact.

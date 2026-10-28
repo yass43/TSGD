@@ -4,11 +4,12 @@
 
 Transported SGD is a fundamental way to use stochastic-gradient
 information: it estimates changes and carries an existing estimate
-along the trajectory. Its strength becomes visible when noise is
-understood through its variation as well as its magnitude. Accurate
-initialization and high similarity can make transport effective even
-when individual gradients are very noisy. Its persistent initialization
-error and accumulated transport errors explain both its limitations
-and its complementarity with fresh estimation and momentum averaging.
-Recognizing these distinct mechanisms clarifies why transport appears
-throughout modern optimization, and why the balance between them matters.
+along the trajectory. With a sufficiently accurate initial estimate,
+small variation in gradient noise can make transport effective even
+when individual gradients are very noisy. Its performance depends on
+the initialization error it retains and the transport errors it
+accumulates. The recursion is already studied on its own in methods
+such as SARAH-IN, and also appears within more elaborate optimizers.
+Our presentation emphasizes its role as a fundamental estimator and
+makes its two error sources explicit. We also briefly discuss reasons
+for combining transport with fresh estimation and momentum averaging.
