@@ -8,21 +8,16 @@ update an existing estimate. SGD is a cornerstone of stochastic
 optimization and a workhorse of machine learning: replacing the exact
 gradient with a stochastic estimate makes each update simple and
 scalable \citep{bottou2018optimization}. TSGD follows an equally
-natural principle. Starting from an initial gradient estimate, it
-estimates the change between consecutive iterates and adds that change
-to its current estimate, transporting gradient information along the
-optimization trajectory.
+natural principle: it adds estimated gradient changes to its current
+estimate, transporting information along the optimization trajectory.
 
 Estimating changes can be much easier than estimating absolute
-quantities. Two stochastic gradients evaluated with the same sample
-can share a noise component; this shared component cancels when they
-are subtracted, while noise that differs between the two evaluations
-may remain. In particular, additive noise that is shared across
-evaluations cancels exactly from their gradient difference, even when
-individual gradients are highly noisy. The difference then gives the
-exact gradient change. With exact initialization as well, TSGD follows
-gradient descent exactly, regardless of the noise magnitude. This is a
-pathwise identity, not merely a statement in expectation.
+quantities. Subtracting gradients evaluated with the same sample
+cancels their shared noise component. In particular, shared additive
+noise cancels exactly, giving the true gradient change even when
+individual gradients are highly noisy. With exact initialization as
+well, TSGD follows gradient descent path by path, regardless of the
+noise magnitude.
 
 The two methods therefore depend on different aspects of the noise.
 Classical SGD guarantees depend on its pointwise magnitude, commonly
@@ -62,10 +57,9 @@ directly, making its strengths and limitations as explicit as those
 of SGD.
 
 Momentum SGD (MSGD) provides a third fundamental mechanism:
-averaging fresh gradients with past estimates.
-Section~\ref{sec:algorithms-and-errors} introduces all three estimators,
-and Section~\ref{sec:connections} describes how modern optimizers use
-TSGD and combine transport with fresh gradients and momentum averaging.
+averaging fresh gradients with past estimates. Section~\ref{sec:algorithms-and-errors}
+introduces all three; Section~\ref{sec:connections} discusses their
+combination in modern optimizers.
 
 The paper develops this viewpoint through three contributions:
 \begin{itemize}

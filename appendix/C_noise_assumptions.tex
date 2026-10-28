@@ -19,26 +19,12 @@ $A,B,C\geq0$ satisfy
 \leq2A(f(x)-f_{\inf})+B\|\nabla f(x)\|^2+C
 \qquad\text{for all }x.
 \end{equation}
-Unbiasedness gives
-\[
-\mathbb E_\xi[\|h(x,\xi)\|^2]
-=\|\nabla f(x)\|^2+\mathbb E_\xi[\|r(x,\xi)\|^2].
-\]
-BV is the special case $(A,B,C)=(0,1,\sigma^2)$.
-ABC permits $\mathbb E_\xi[\|h(x,\xi)\|^2]$ to grow with
-$f(x)-f_{\inf}$ or $\|\nabla f(x)\|^2$.
-In particular, if $C=0$ and a sequence $(x_k)$ satisfies
-\[
-f(x_k)-f_{\inf}\to0
-\qquad\text{and}\qquad
-\|\nabla f(x_k)\|^2\to0,
-\]
-then ABC implies
-\[
-\mathbb E_\xi[\|h(x_k,\xi)\|^2]\to0.
-\]
-Thus the second-moment term in SGD's descent bound can vanish
-instead of being controlled by a fixed noise bound.
+By unbiasedness, BV gives $(A,B,C)=(0,1,\sigma^2)$.
+ABC allows the second moment to grow with the objective gap and
+gradient norm. If $C=0$, and both $f(x_k)-f_{\inf}\to0$ and
+$\|\nabla f(x_k)\|^2\to0$, then
+$\mathbb E_\xi[\|h(x_k,\xi)\|^2]\to0$: the second-moment penalty
+in SGD's descent bound can vanish.
 
 For example, let $f(x)=x^2/2$ and $h(x,a)=ax$, where $a$ equals
 $0$ or $2$ with equal probability. Its residual is
@@ -49,24 +35,16 @@ $r(x,a)=h(x,a)-\nabla f(x)=(a-1)x$, so
 \mathbb E[|r(x,a)|^2]=x^2.
 \]
 Thus ABC holds with $(A,B,C)=(0,2,0)$, while global BV fails
-because $\mathbb E[|h(x,a)-\nabla f(x)|^2]=\mathbb E[|r(x,a)|^2]=x^2$ is unbounded as $|x|\to\infty$.
-As in Section~\ref{subsec:multiplicative-noise-comparison}, fresh
-gradients become exact at the minimizer despite unbounded noise
-variance over the domain.
+because the noise variance $x^2$ is unbounded as $|x|\to\infty$,
+even though fresh gradients are exact at the minimizer.
 
 \paragraph{One-point and two-point conditions.}
 BV and ABC constrain the stochastic gradient at each point separately.
-Centered similarity instead constrains noise differences under shared
-sampling, and therefore depends on how the oracle couples two points.
-In Section~\ref{subsec:fixed-variance-variable-similarity}, the
-pointwise gradient distributions are unchanged as the frequency
-$\omega$ varies, while the smallest similarity constant is
-$\delta=\sigma\omega$. Thus the same pointwise distributions can
-coexist with arbitrarily different transport accuracy.
-
-The counterexamples below concern global oracle conditions
-and show that neither BV nor ABC implies centered similarity,
-while centered similarity implies neither BV nor ABC.
+Centered similarity constrains noise differences under shared sampling.
+Section~\ref{subsec:fixed-variance-variable-similarity} shows that
+identical pointwise distributions can have different similarity
+constants. The following global counterexamples establish more:
+neither BV nor ABC implies similarity, and similarity implies neither.
 
 \paragraph{Neither BV nor ABC implies global similarity.}
 Take $f(x)=x^2/2$ and $h(x,\xi)=x+\xi\sin(x^2)$, where
@@ -105,11 +83,8 @@ exists.
 Take $f(x)=\log\cosh x$ and
 $h(x,\xi)=\tanh x+\xi x$, with
 $\mathbb E[\xi]=0$ and $\mathbb E[\xi^2]=\delta^2>0$.
-The objective is lower bounded and $1$-smooth, since
-\[
-f(x)\geq0,\qquad \nabla f(x)=\tanh x,\qquad
-f''(x)=\frac1{\cosh^2x}\in(0,1].
-\]
+The objective is nonnegative and $1$-smooth, since
+$f''(x)=1/\cosh^2x\in(0,1]$.
 The unbiased oracle has residual $r(x,\xi)=\xi x$, and hence
 \[
 \mathbb E_\xi[|r(x,\xi)-r(y,\xi)|^2]
