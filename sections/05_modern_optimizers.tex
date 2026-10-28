@@ -105,6 +105,25 @@ Gradient differences also appear in decentralized gradient tracking
 with information from neighboring agents to track the average gradient
 across the network.
 
+\paragraph{Neural-network applications.}
+Transport-based methods have been used to train both image classifiers
+and language models. SARAH and SARAH+ were evaluated on networks with
+one fully connected hidden layer on MNIST and CIFAR-10
+\citep{nguyen2017sarah_nonconvex}; PAGE was evaluated on LeNet, VGG,
+and ResNet architectures \citep{li2021page}; and MARS was evaluated
+on GPT-2 language models \citep{yuan2025mars}.
+These experiments concern composite optimizers, not uninterrupted
+pure TSGD: SARAH variants restart their transport phases, PAGE refreshes
+probabilistically, and MARS combines gradient-difference corrections
+with momentum and preconditioning. In particular, although the
+nonconvex SARAH paper analyzes the pure-transport inner loop SARAH-IN,
+its neural-network experiments use restarted SARAH/SARAH+.
+Some practical MARS variants also approximate the correction using
+gradients computed with different samples, rather than the shared-sample
+increment studied here \citep{yuan2025mars}.
+These applications motivate studying transport as a building block;
+they do not establish the performance of pure TSGD in isolation.
+
 \subsection{Why Combine Fundamental Estimators?}
 \label{subsec:why-combine-estimators}
 
