@@ -47,39 +47,28 @@ error $E_k$ and true stationarity error $G_k$ are distinct quantities.
 \subsection{Exact Initialization and Exact Transport}
 \label{subsec:exact-init-exact-transport}
 
-For any objective, if $g_0=\nabla f(x_0)$ and
-$D_{k+1}=\nabla f(x_{k+1})-\nabla f(x_k)$, induction gives
-\[
-g_{k+1}=g_k+D_{k+1}=\nabla f(x_{k+1}),\qquad
-x_{k+1}=x_k-\eta\nabla f(x_k).
-\]
-TSGD is exactly GD, path by path. Under
-Assumption~\ref{ass:smooth-objective}, taking its standard stepsize
-$\eta=1/L$ in Theorem~\ref{thm:tsgd-stationarity} gives
-\begin{equation}
-\label{eq:exact-transport-gd-bound}
-\frac1K\sum_{k=0}^{K-1}\|\nabla f(x_k)\|^2
-\leq\frac{2L\Delta_0}{K}.
-\end{equation}
-Moreover, GD descent yields, for every $K$,
+Exact initialization and transport give $g_k=\nabla f(x_k)$ by
+induction, so TSGD is GD path by path. At $\eta=1/L$, GD descent yields
 \[
 \frac1{2L}\sum_{k=0}^{K-1}\|\nabla f(x_k)\|^2
 \leq f(x_0)-f(x_K)\leq\Delta_0.
 \]
-The nonnegative partial sums are uniformly bounded. Thus
-$\sum_{k\geq0}\|\nabla f(x_k)\|^2<\infty$ and
-$\|\nabla f(x_k)\|^2\to0$, without convexity or convergence of
-the iterates themselves.
+Consequently,
+\begin{equation}
+\label{eq:exact-transport-gd-bound}
+\frac1K\sum_{k=0}^{K-1}\|\nabla f(x_k)\|^2\leq\frac{2L\Delta_0}{K}.
+\end{equation}
+The partial sums are uniformly bounded, so the infinite series
+converges and $\|\nabla f(x_k)\|^2\to0$, without convexity or
+convergence of the iterates.
 
-In \eqref{eq:quadratic-noise-model}, $\delta=0$ means $a=0$
-almost surely, so transport is exact despite any additive noise.
-With $g_0=\lambda x_0=\nabla f(x_0)$ and $r:=1-\eta\lambda$,
+For the quadratic, $\delta=0$ means $a=0$ almost surely.
+Writing $r=1-\eta\lambda$, exact initialization gives
 \begin{equation}
 \label{eq:quadratic-exact-gd}
 x_k=r^kx_0,\qquad g_k=\lambda r^kx_0,\qquad E_k=0.
 \end{equation}
-For $0<\eta<2/\lambda$, $|r|<1$ and
-$G_k=\lambda^2r^{2k}x_0^2\to0$.
+Thus $G_k=\lambda^2r^{2k}x_0^2\to0$ for $0<\eta<2/\lambda$.
 
 \subsection{Inexact Initialization and Exact Transport}
 \label{subsec:inexact-init-exact-transport}
@@ -103,16 +92,6 @@ $\|\nabla f(x_k)\|^2\to\|e_0\|^2$.
 This additional lower bound is required for the pathwise asymptotic
 claim, not for \eqref{eq:exact-transport-inexact-init-bound}.
 
-Indeed, adding a linear term does not change gradient differences:
-\[
-f_c(x):=f(x)+\langle c,x\rangle
-\quad\Longrightarrow\quad
-\nabla f_c(x)-\nabla f_c(y)=\nabla f(x)-\nabla f(y).
-\]
-If TSGD is applied to $f_c$ but initialized with $\nabla f(x_0)$,
-exact transport follows GD on $f$, so missing absolute-gradient
-information cannot be recovered from differences alone.
-
 For the quadratic and $\delta=0$, the exact dynamics are
 \begin{equation}
 \label{eq:quadratic-tilted-trajectory}
@@ -132,12 +111,6 @@ $x_k\to-e_0/\lambda$ in mean square and
 \label{eq:quadratic-init-residual}
 \lim_{k\to\infty}G_k=E_0.
 \end{equation}
-For centered additive initialization $e_0=b_0$ of variance $\sigma^2$,
-this gives $\mathbb E[x_\infty]=0$ but
-$\operatorname{Var}(x_\infty)=\sigma^2/\lambda^2$ and
-$\lim_kG_k=\sigma^2$: a correct mean iterate can conceal random
-nonoptimal limits.
-
 \paragraph{Sharpness of the initialization coefficient.}
 Choose an initialization with $E_0>0$.
 For $\varepsilon>0$, choose $N$ with $|G_k-E_0|\leq\varepsilon$
@@ -299,4 +272,3 @@ without modeling the cost of obtaining $g_0$.
   4,000 trajectories with pointwise bands of $\pm2$ standard errors.}
   \label{fig:ls-errors}
 \end{figure}
-\clearpage

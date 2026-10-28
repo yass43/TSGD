@@ -130,56 +130,16 @@ $\tanh^2x/x^2$ gives
 \[
 \delta^2\leq\frac{2A}{|x|}+\frac{B+C}{x^2}.
 \]
-For any finite positive $A,B,C$, the right-hand side tends to zero as
+For any finite nonnegative $A,B,C$, the right-hand side tends to zero as
 $|x|\to\infty$, whereas the left-hand side is the fixed positive
 constant $\delta^2$. The inequality therefore fails for sufficiently
 large $|x|$, so no finite ABC constants exist.
 
-\subsection{A TSGD Guarantee without Bounded Variance}
-\label{subsec:similarity-without-bv}
-
-For the log-cosh example above, $f_{\inf}=0$ and the fresh coupled
-increment is
-\[
-D_{k+1}=\tanh x_{k+1}-\tanh x_k
-       +\xi_{k+1}(x_{k+1}-x_k).
-\]
-Its conditional error variance is exactly
-$\delta^2(x_{k+1}-x_k)^2$. Therefore, for deterministic $x_0$ and
-arbitrary initialization with finite $E_0$,
-\eqref{eq:tsgd-optimized-bound} gives
-\begin{equation}
-\label{eq:logcosh-tsgd-guarantee}
-\overline G_K^{\mathrm{TSGD}}
-\leq\frac{\log\cosh x_0}{K}
-       \left(1+\sqrt{1+4(K-1)\delta^2}\right)+E_0.
-\end{equation}
-With exact initialization, this is an $O(K^{-1/2})$ stationarity
-guarantee even though pointwise gradient variance is unbounded.
-
-For comparison, fixed-step SGD satisfies
-$x_{k+1}=x_k-\eta\tanh x_k-\eta\xi_kx_k$.
-For $V_k:=\mathbb E[x_k^2]$, independence and centering give
-\[
-\begin{aligned}
-V_{k+1}
- &=\mathbb E[(x_k-\eta\tanh x_k)^2]+\eta^2\delta^2V_k\\
- &\geq(1+\eta^2\delta^2)V_k-2\eta\sqrt{V_k},
-\end{aligned}
-\]
-where $|\tanh x|\leq1$ and Cauchy--Schwarz were used. If
-$|x_0|\geq4/(\eta\delta^2)$, then
-\[
-\sqrt{V_k}\geq\frac4{\eta\delta^2}
-\quad\Longrightarrow\quad
-2\eta\sqrt{V_k}\leq\frac{\eta^2\delta^2}{2}V_k
-\quad\Longrightarrow\quad
-V_{k+1}\geq\left(1+\frac{\eta^2\delta^2}{2}\right)V_k.
-\]
-Induction preserves the threshold and proves divergence of the
-iterate second moment. This does not establish failure of stationarity,
-which concerns $\mathbb E[\tanh^2x_k]$. Failure of BV alone is not
-evidence that SGD cannot converge.
+For this oracle, Theorem~\ref{thm:tsgd-stationarity} still applies:
+the coupled increment has conditional error variance
+$\delta^2(x_{k+1}-x_k)^2$. Thus exact initialization gives the
+$O(K^{-1/2})$ TSGD guarantee despite failure of both BV and ABC.
+This does not by itself establish that SGD fails.
 
 \subsection{Quadratic Finite Sums and the Smallest Similarity Constant}
 \label{app:quadratic-similarity}
