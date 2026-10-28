@@ -145,8 +145,8 @@ preferable even when initialization is exact.
 
 Figure~\ref{fig:ls-main}(b) shows the same phenomenon on least squares
 with noiseless labels and highly variable features. SGD's true gradient
-decays geometrically, whereas the TSGD estimator decays at nearly the same
-rate but its true gradient settles near $0.27$. A small transported
+decays in mean square, as does TSGD's estimator, but TSGD's expected
+squared true-gradient norm settles near $0.27$. A small transported
 estimate therefore does not certify a small true gradient.
 
 \subsection{What Transport Cannot Do}

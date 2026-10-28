@@ -247,6 +247,16 @@ error monotonically.
 \subsection{Numerical Illustration of Fixed Variance and Variable Similarity}
 \label{app:sinusoid}
 
+The preceding construction lets us vary transport accuracy without
+changing the distribution of individual stochastic gradients.
+Figure~\ref{fig:sinusoid} illustrates the resulting difference between
+SGD and TSGD. We fix $L=\sigma=x_0=1$ and $\eta=0.1$, and vary
+$\omega\in\{0,0.5,1,2\}$, so $\delta=\omega$.
+SGD has the same law at every frequency. TSGD follows GD at $\omega=0$,
+but accumulates transport error at nonzero frequencies. In these runs,
+its final error is below SGD's at $\omega=0.5$ and above it at
+$\omega=2$, despite identical pointwise noise distributions.
+
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.9\linewidth]{figures/similarity_experiment.pdf}
@@ -258,44 +268,36 @@ and $\varphi_0+\pi$: their noises cancel, giving $g_0=Lx_0$.
 These two evaluations are included in the horizontal-axis count.
 Subsequent SGD updates cost one evaluation and TSGD updates cost two.
 SGD is simulated at $\omega=1$; its expected curve is identical at
-all frequencies. The sampling, cost accounting, and numerical checks
-are described below.}
+all frequencies.}
 \label{fig:sinusoid}
 \end{figure}
 
-\paragraph{Numerical protocol and reproducibility.}
+\paragraph{Sampling and initialization.}
 \label{app:numerical-details}
 
-Figure~\ref{fig:sinusoid} uses
-$L=\sigma=x_0=1$, $\eta=0.1$, and $\omega\in\{0,0.5,1,2\}$.
-Each curve averages $100{,}000$ independent trajectories, generated
-with NumPy's default random generator from seed $20261023$ and
-separate spawned random streams for each curve. SGD is simulated
-at $\omega=1$; its law is frequency-independent. All later phases
-are independent uniform samples; only the two endpoint evaluations
-within a transport increment share their phase.
-
-\paragraph{Initialization and cost.}
-This controlled oracle allows an antithetic initial pair:
+Each curve averages $100{,}000$ independent trajectories. To isolate
+transport error, all methods start from the same exact estimate,
+obtained using the oracle's antithetic symmetry:
 \[
 g_0=\frac12\bigl(h(x_0,\varphi_0)+h(x_0,\varphi_0+\pi)\bigr)
 =Lx_0.
 \]
-We charge two pointwise evaluations for this exact estimate for
-every method. This uses a specific sampling symmetry, not a claim
-that two independent samples generally yield exact initialization.
-All methods use this estimate for their first update. Thereafter,
+This exact cancellation relies on paired phases, not independent
+samples. Subsequent phases are independent and uniform, with the
+same phase used at both endpoints of each transport difference.
+
+\paragraph{Evaluation count.}
+The horizontal axis includes the two evaluations used to initialize
+each method. All methods use this estimate for their first update. Thereafter,
 SGD uses one new stochastic gradient per update and TSGD uses two
 pointwise evaluations per coupled difference. After $k\geq1$
 iterate updates, the costs are $k+1$ for SGD and $2k$ for TSGD.
 No unused final transport correction is computed. Hence a budget
 of $200$ permits $199$ SGD updates and $100$ TSGD updates.
-This protocol isolates transport accuracy after an equally charged,
-identical initial estimate; it does not compare generic
-independent-batch initialization procedures.
+The comparison therefore starts from identical information, but relies
+on an initialization procedure specific to this oracle.
 
-\paragraph{Stepsize and analytical checks.}
-The common stepsize is held fixed for all frequencies and methods.
+\paragraph{Constant-step behavior.}
 For the sinusoidal quadratic, conditional centeredness and
 similarity give
 \[
@@ -303,8 +305,8 @@ similarity give
 \leq\bigl((1-\eta)^2+\eta^2\omega^2\bigr)g_k^2
 \leq0.85g_k^2.
 \]
-Thus the chosen step is mean-square stable across all tested
-frequencies. It illustrates constant-step error accumulation, not
+Thus the estimator contracts in mean square at every tested frequency.
+The experiment illustrates constant-step error accumulation, not
 the horizon-optimized guarantee of Section~\ref{sec:tsgd-convergence}.
 The SGD recurrence \eqref{eq:phase-sgd-dynamics} applies after the
 common first update, for which $G_1=0.9^2$. Every simulated SGD
@@ -313,7 +315,7 @@ recurrence. At $\omega=0$, TSGD follows
 $G_k=0.9^{2k}$; the relative numerical discrepancy is below
 $10^{-12}$ throughout the plotted run.
 
-\paragraph{Means and tail contributions.}
+\paragraph{Results.}
 At budget $200$, the final sample means and standard errors are
 \begin{center}
 \small
@@ -329,74 +331,103 @@ TSGD, $\omega=2$ & $0.259610$ & $0.003050$\\
 \bottomrule
 \end{tabular}
 \end{center}
-All trajectories are retained. For $\omega=2$, the largest
-$0.1\%$ of final squared gradients contribute $7.72\%$ of their
-sum; the largest observed value is $77.18$. The reported means
-therefore include the comparatively rare large errors rather than
-summarizing only typical trajectories. The shaded bands are the
-sample mean plus or minus two estimated standard errors at each
-cost, not simultaneous confidence bands or trajectory ranges.
+The means include all trajectories, including rare large errors:
+at $\omega=2$, the largest $0.1\%$ of final squared gradients contribute
+$7.72\%$ of the total. Shaded bands show pointwise Monte Carlo uncertainty
+in the mean, not the spread of individual trajectories. The observed
+ordering illustrates the importance of noise variation; it does not
+assert that every transport increment becomes noisier as $\omega$
+increases, since its variance depends on the sine term in
+\eqref{eq:phase-noise-moments}.
 
-The script \texttt{scripts/similarity\_experiment.py} reproduces
-the simulations, analytical checks, and figure. Its dependencies
-are recorded in \texttt{scripts/requirements.txt}. The accompanying
-\texttt{figures/similarity\_experiment.csv} records per-iterate
-means and standard errors; the \texttt{.json} file records parameters,
-software versions, analytical checks, and final quantile summaries.
 
 \subsection{Least-Squares Experiments}
 \label{app:ls}
 
-\paragraph{Model and protocol.}
-All least-squares plots use $f(x)=\tfrac12\mathbb E[\|Ax-b\|^2]$ in
-$d=10$ dimensions. Let $H=\operatorname{diag}(0.1,0.2,\ldots,1)$,
+The least-squares experiments illustrate four aspects of transport:
+label-noise cancellation, dependence on initialization, dependence on
+similarity, and false convergence. We use one model throughout, varying
+label noise and feature variability separately. These are comparisons
+at a common stepsize and iteration count, not comparisons of computational
+cost or optimally tuned performance.
+
+\paragraph{Model.}
+Let $f(x)=\tfrac12\mathbb E[\|Ax-b\|^2]$ in $d=10$ dimensions, with
+$H=\operatorname{diag}(0.1,0.2,\ldots,1)$,
 $v=1+\kappa\zeta$ with $\mathbb P(\zeta=1)=\mathbb P(\zeta=-1)=1/2$,
 $A=\sqrt v\,H^{1/2}$, and $b=Ax^\star+s\varepsilon$, where
 $x^\star=0$ and $\varepsilon\sim\mathcal N(0,I_d)$ is independent
-of $v$. Thus $\nabla f(x)=H(x-x^\star)$, the stochastic gradient is
-$h(x;v,\varepsilon)=vH(x-x^\star)-s\sqrt v\,H^{1/2}\varepsilon$,
-and the global centered-similarity constant is $\delta=\kappa$ since
-$L=\|H\|=1$. The initial point is
-$x_0=\boldsymbol 1/\|H\boldsymbol 1\|$, so
-$\|\nabla f(x_0)\|^2=1$. All panels use $\eta=0.5$, 4,000 independent
-trajectories, 400 updates, and seed $20261028$; plotted bands are
-pointwise means $\pm2$ Monte Carlo standard errors.
+of $v$. For $0\leq\kappa<1$, the stochastic gradient and its shared-sample
+difference are
+\[
+\begin{aligned}
+h(x;v,\varepsilon)&=vH(x-x^\star)-s\sqrt v\,H^{1/2}\varepsilon,\\
+h(x;v,\varepsilon)-h(y;v,\varepsilon)&=vH(x-y).
+\end{aligned}
+\]
+Hence $\nabla f(x)=H(x-x^\star)$ and
+\[
+\begin{aligned}
+\mathbb E[\|h(x)-\nabla f(x)\|^2]
+  &=\kappa^2\|H(x-x^\star)\|^2+s^2\operatorname{tr}(H),\\
+\mathbb E[\|r(x)-r(y)\|^2]&=\kappa^2\|H(x-y)\|^2.
+\end{aligned}
+\]
+Thus $s$ controls the additive contribution to gradient noise but does
+not affect transport. The smallest global similarity constant is
+$\delta=\kappa$, since $L=\|H\|=1$.
 
-Panels A and B use sampled initial estimates. Panel A has $s=1$ and
-$\kappa=0.05$; TSGD averages $B_0\in\{1,128,512\}$ independent
-stochastic gradients for initialization. Its initial mean-square error is
+\paragraph{Protocol.}
+The initial point is
+$x_0=\boldsymbol 1/\|H\boldsymbol 1\|$, so
+$\|\nabla f(x_0)\|^2=1$. Each run uses $\eta=0.5$ and 400 updates;
+the figures show the first 80 iterations. Curves average 4,000 independent
+trajectories, with pointwise bands of $\pm2$ Monte Carlo standard errors.
+Initialization samples are independent of subsequent samples. Each
+transport increment uses the same feature and label at both endpoints.
+
+\paragraph{Sampled initialization: preserving a good or bad estimate.}
+Figure~\ref{fig:ls-init} uses $s=1$ and $\kappa=0.05$: fresh gradients
+are noisy, whereas their differences are accurate. SGD uses one fresh
+sample per update. TSGD starts from an average of
+$B_0\in\{1,128,512\}$ independent stochastic gradients, giving
 \[
 E_0=\frac{\kappa^2\|Hx_0\|^2+s^2\operatorname{tr}(H)}{B_0},
 \]
-so increasing $B_0$ lowers the initialization contribution, while a
-transport-error residual remains. The plotted floor falls from about
-$5.51$ at $B_0=1$ to $0.044$ and $0.011$ at $B_0=128$ and $512$.
-Panel B has $s=0$ and $\kappa=0.9$, with TSGD initialized from $B_0=128$
-samples. Its estimator and SGD's true-gradient norm have the same
-coordinatewise geometric contraction factors; their decay curves nearly
-overlap because the batch initialization adds only $0.63\%$ to the initial
-second moment. The TSGD true-gradient norm nevertheless approaches about
-$0.268$, giving the false-convergence illustration in
-Figure~\ref{fig:ls-main}(b).
+The observed residuals are approximately $5.51$, $0.044$, and $0.011$,
+respectively. A single-sample initialization gives a larger residual than
+SGD, while the more accurate initial estimates give smaller residuals.
+Accurate transport therefore benefits from good initial information,
+but does not repair a poor starting estimate. Increasing $B_0$ also costs
+more initial evaluations; this figure illustrates its statistical effect,
+not a computational advantage.
 
-Panels C and D instead use controlled initializations and are not
-computational-cost comparisons. In C, both methods start from the exact
-gradient and use matched feature draws across $s\in\{0,1,5\}$, with
-$\kappa=0.2$. The shared label-noise term cancels from each TSGD
-increment, so its trajectories coincide across all three values of $s$.
-In D, TSGD starts from $g_0=Hx_0+e_0$, where independently sampled
-$e_0\sim\mathcal N(0,(E_0/d)I_d)$; the four choices are
-$\kappa\in\{0.05,0.9\}$ and $E_0\in\{10^{-3},10^{-1}\}$.
-The script \texttt{experiments/least\_squares.py} reproduces the runs
-and figures.
+\paragraph{Noiseless labels: false convergence.}
+Figure~\ref{fig:ls-main}(b) instead uses $s=0$ and $\kappa=0.9$,
+with $B_0=128$ for TSGD. Fresh-gradient noise now vanishes at the
+minimizer, and SGD's expected squared gradient norm tends to zero.
+The TSGD estimator also tends to zero in mean square, but its expected
+squared true-gradient norm approaches approximately $0.268$.
+Indeed, the coordinatewise second moments of SGD's true gradient and
+TSGD's estimator share the contraction factors
+$\rho_j=(1-\eta\lambda_j)^2+\eta^2\kappa^2\lambda_j^2$.
+Their curves nearly coincide because TSGD's sampled initialization
+increases each initial second moment by only a factor
+$1+\kappa^2/B_0\approx1.0063$. The agreement is between SGD's true
+gradient and TSGD's estimator, not between their stationarity errors.
 
-\paragraph{Initialization quality.}
-Figure~\ref{fig:ls-init} displays panel A. The residual decreases as the
-initial batch becomes more accurate, while transport error creates an
-additional floor even with a highly accurate initialization. A single
-sample gives a worse residual than SGD here; larger initialization batches
-give substantially smaller residuals. This illustrates that transport
-preserves the quality of its starting estimate rather than correcting it.
+\paragraph{Controlled initialization: isolating noise cancellation and similarity.}
+Figure~\ref{fig:ls-main}(a) starts both methods from the exact gradient,
+with $\kappa=0.2$ and matched feature draws across $s\in\{0,1,5\}$.
+TSGD's trajectories coincide across all three label-noise levels because
+the shared label noise cancels from every increment. Its positive
+residual is due to feature variability, not label noise. By contrast,
+SGD's residual increases with $s$ and vanishes when $s=0$.
+Figure~\ref{fig:ls-errors} separately varies $\delta$ and a prescribed
+initial error $E_0$; Appendix~\ref{app:quad-numerics} derives its exact
+limiting errors. Unlike the sampled initializations above, these
+controlled estimates isolate mechanisms without modeling how the initial
+accuracy is obtained.
 
 \begin{figure}[t]
   \centering

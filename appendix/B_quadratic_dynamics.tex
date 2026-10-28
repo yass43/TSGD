@@ -260,39 +260,47 @@ stationarity errors are respectively $0$, $A\lambda^2x_0^2$,
 $E_0$, and $E_0+AM_0$. The exact-transport identities are general;
 these stochastic-transport formulas rely on the quadratic model.
 
-\subsection{Numerical Check on Least Squares}
+\subsection{Initialization and Transport Errors on Least Squares}
 \label{app:quad-numerics}
 
-The least-squares experiments in Appendix~\ref{app:ls} use a diagonal
-quadratic with eigenvalues $\lambda_j$. In each coordinate, the shared
-feature multiplier gives the quadratic recursion above with
-$a_{j,k}=(v_k-1)\lambda_j$; the additive label-noise term cancels from
-every transport increment. Thus each coordinate has the same moment
-recursions as in \eqref{eq:quadratic-moment-recursions}, with
-$\delta_j^2=\kappa^2\lambda_j^2$.
+Figure~\ref{fig:ls-errors} illustrates how initialization quality and
+similarity jointly determine the residual error. We use the least-squares
+model of Appendix~\ref{app:ls}, whose population Hessian is diagonal
+with eigenvalues $\lambda_j$. Shared sampling cancels the label noise,
+and each coordinate follows \eqref{eq:quadratic-core-recursions} with
+$a_{j,k}=(v_k-1)\lambda_j$ and $\delta_j^2=\kappa^2\lambda_j^2$.
+The same multiplier $v_k$ acts on every coordinate, but independence
+between coordinates is not needed: the squared gradient norm is the
+sum of their squared gradients.
 
-For a centered initialization error with
-$\mathbb E[e_{0,j}^2]=E_0/d$, define
+To vary initialization quality independently of the oracle, we set
+$g_0=Hx_0+e_0$, with $e_0\sim\mathcal N(0,(E_0/d)I_d)$ independent
+of subsequent samples. Define
 \[
 \rho_j=(1-\eta\lambda_j)^2+\eta^2\kappa^2\lambda_j^2,
 \qquad
 A_j=\frac{\eta\kappa^2\lambda_j}
  {2-\eta(1+\kappa^2)\lambda_j}.
 \]
-When $\rho_j<1$, the coordinatewise result
+When $\rho_j<1$ for every $j$, the coordinatewise result
 \eqref{eq:quadratic-interaction} gives
 \begin{equation}
 \label{eq:least-squares-residual}
-\lim_{k\to\infty}\mathbb E\|\nabla f(x_k)\|^2
+\lim_{k\to\infty}\mathbb E[\|\nabla f(x_k)\|^2]
 =E_0+\sum_{j=1}^d A_j
   \left(\lambda_j^2x_{0,j}^2+\frac{E_0}{d}\right).
 \end{equation}
-The figure checks these limits for $d=10$, $\eta=1/2$,
+We take $d=10$, $\eta=1/2$,
 $\lambda_j\in\{0.1,0.2,\ldots,1\}$, and
-$\kappa\in\{0.05,0.9\}$. Since $L=\max_j\lambda_j=1$, the global
-centered-similarity constant is $\delta=\kappa$. The dotted lines in
-Figure~\ref{fig:ls-errors} show the exact limits in
-\eqref{eq:least-squares-residual}.
+$\kappa\in\{0.05,0.9\}$, so stability holds and $\delta=\kappa$.
+For each value of $\delta$, we compare $E_0=10^{-3}$ and $E_0=10^{-1}$.
+The observed plateaus agree with the exact limits shown by dotted lines.
+At fixed similarity, improving initialization reduces both the inherited
+error and the transport contribution. At fixed initialization, smaller
+$\delta$ reduces the accumulated transport error. In particular, a good
+initial estimate alone does not ensure a small residual when transport
+is noisy. These controlled initializations isolate the two effects;
+they do not account for the cost of obtaining the initial estimate.
 
 \begin{figure}[t]
   \centering
