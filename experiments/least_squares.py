@@ -18,7 +18,6 @@ import sys
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -192,56 +191,12 @@ def scenarios():
     return result
 
 
-def plot_results(results, output, steps):
-    plt.rcParams.update({"font.size": 10, "axes.spines.top": False,
-                         "axes.spines.right": False, "pdf.fonttype": 42})
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8.5), constrained_layout=True)
-    colors = ["#222222", "#d55e00", "#0072b2", "#009e73"]
+def plot_results(results, output, settings, max_iter=80):
+    """Delegate to the same renderer used for saved runs and the notebook."""
+    from plot_least_squares import save_figure
 
-    def line(ax, rows, label, color, style="-", metric="gradient", marker=None, offset=0):
-        k = np.array([r["iteration"] for r in rows])
-        mean = np.array([r[f"{metric}_mean"] for r in rows])
-        se = np.array([r[f"{metric}_se"] for r in rows])
-        # A floor is ONLY for rendering a log axis; CSV values are not clipped.
-        floor = 1e-30
-        ax.plot(k, np.maximum(mean, floor), label=label, color=color, ls=style,
-                lw=1.7, marker=marker, markevery=(offset, max(1, steps // 10)),
-                ms=5, markerfacecolor="none")
-        ax.fill_between(k, np.maximum(mean - 2 * se, floor),
-                        np.maximum(mean + 2 * se, floor), color=color, alpha=.10)
-
-    for panel, ax in zip("ABCD", axes.flat):
-        group = [(s, rows) for s, rows in results if s.panel == panel]
-        for index, (s, rows) in enumerate(group):
-            if panel == "C":
-                if s.method == "TSGD":
-                    line(ax, rows, f"TSGD, s={s.label_noise:g}", "#0072b2",
-                         marker=["o", "s", "^"][index], offset=index*max(1, steps//30))
-                else:
-                    line(ax, rows, f"SGD, s={s.label_noise:g}",
-                         ["#222222", "#d55e00", "#cc79a7"][index - 3], "--")
-            elif panel == "D":
-                line(ax, rows, rf"$\delta={s.kappa:g},\ E_0={s.initial_mse:g}$",
-                     "#0072b2" if s.kappa == .05 else "#d55e00",
-                     "-" if s.initial_mse == .001 else "--")
-            else:
-                line(ax, rows, s.name.replace("B0=", "$B_0=$"), colors[index])
-                if panel == "B" and s.method == "TSGD":
-                    line(ax, rows, r"TSGD $\mathbb{E}\|g_k\|^2$", colors[index], "--", "estimator")
-        ax.set_yscale("log")
-        ax.set_xlim(0, steps)
-        ax.set_xlabel("Iteration k")
-        ax.set_ylabel(r"$\mathbb{E}\|\nabla f(x_k)\|^2$")
-        ax.grid(True, which="major", alpha=.18)
-        ax.legend(fontsize=8, loc="best")
-    axes[0, 0].set_title("A  Noisy gradients, accurate differences\nSampled initialization")
-    axes[0, 1].set_title("B  Fresh gradients improve; transport can falsely converge\nSampled initialization")
-    axes[1, 0].set_title("C  Label noise cancels from transport\nControlled exact initialization; TSGD curves coincide")
-    axes[1, 1].set_title("D  Initialization quality and similarity\nControlled initialization")
-    fig.suptitle("Pure TSGD mechanisms: common stepsize, no refreshes, no budget comparison", fontsize=12)
-    fig.savefig(output / "least_squares.pdf")
-    fig.savefig(output / "least_squares.png", dpi=200)
-    plt.close(fig)
+    series = {(scenario.panel, scenario.name): rows for scenario, rows in results}
+    save_figure(series, settings, output, max_iter=max_iter)
 
 
 def main():
@@ -251,10 +206,14 @@ def main():
     parser.add_argument("--dimension", type=int, default=10)
     parser.add_argument("--eta", type=float, default=.5)
     parser.add_argument("--seed", type=int, default=20261028)
+    parser.add_argument("--plot-max-iter", type=int, default=80,
+                        help="Displayed horizon only; all --steps iterations are simulated and saved")
     parser.add_argument("--output", type=Path, default=Path(__file__).parent / "results")
     args = parser.parse_args()
     if args.runs < 2 or args.steps < 1 or args.dimension < 2:
         parser.error("Require runs>=2, steps>=1, dimension>=2.")
+    if args.plot_max_iter < 1:
+        parser.error("--plot-max-iter must be positive.")
     # Common mean-square stability bound for all scenarios; not a universal TSGD theorem.
     if not 0 < args.eta < 2 / (1 + .9**2):
         parser.error("Require 0 < eta < 2/(1+0.9^2) for this model.")
@@ -305,7 +264,7 @@ def main():
                 "scenarios": summaries}
     with (args.output / "settings_and_summary.json").open("w", encoding="utf-8") as handle:
         json.dump(metadata, handle, indent=2, allow_nan=False)
-    plot_results(results, args.output, args.steps)
+    plot_results(results, args.output, metadata, args.plot_max_iter)
     print(f"Saved results to {args.output.resolve()}")
     print(f"Panel C cancellation discrepancy: {max_cancellation_difference:.3g}")
 

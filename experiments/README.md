@@ -87,6 +87,36 @@ Outputs in `results/` (or `--output PATH`):
 - `settings_and_summary.json`: parameters, software versions, initialization
   assumptions, exact limiting errors, and cancellation-check discrepancy.
 
+## Replot an existing job (no resimulation)
+
+From `experiments` in your activated environment:
+
+```bash
+python plot_least_squares.py --run-dir results/cluster/full_54712913
+# Optional display controls:
+python plot_least_squares.py --run-dir results/cluster/full_54712913 --max-iter 60 --exact
+python plot_least_squares.py --run-dir results/cluster/full_54712913 --full-horizon
+```
+
+The command reads only the saved CSV/JSON and writes new PDF/PNG figures plus
+`caption.txt` in the run's `replot/` subfolder. Original figures and raw results
+are preserved by default. `--output PATH` selects another figure directory.
+No Slurm job or new Monte Carlo run is needed. Default display: iterations 0–80;
+the vertical limits are fitted to the visible data, not the entire trajectory.
+`--no-inset` hides A's diagnostic; `--no-bands` hides uncertainty shading.
+
+Presentation updates: A lists expected initialization errors; B uses SGD markers
+and a dashed TSGD estimator, with a squared-norm axis and direct labels; C identifies
+the transport-noise residual at nonzero delta; D separates similarity and
+initialization legend keys. The sampled/controlled distinction stays in the caption.
+The A inset uses exact model moments along the B0=128 TSGD trajectory distribution:
+fresh single-sample oracle MSE is `delta^2 G_k + s^2 trace(H)`; the next increment's
+error MSE is `eta^2 delta^2 sum_i lambda_i^2 E[g_{k,i}^2]`.
+These are oracle errors, not tracking errors or equal-cost comparisons.
+
+New simulation jobs automatically use this renderer. `--plot-max-iter` changes
+only the figure horizon, never the number of simulated or saved iterations.
+
 ## Inspect a completed run in a notebook
 
 Open `inspect_results.ipynb` in Jupyter or VS Code, select the existing
@@ -96,10 +126,12 @@ job or a downloaded local results directory. It lists available runs and
 fails explicitly if the selected run is missing; it does not silently show
 another experiment.
 
-The notebook displays the original figure, each panel separately, sampled
+The notebook rebuilds the updated figure, each panel separately, sampled
 initialization errors, the false-convergence diagnostics, cancellation checks,
 and exact finite-time/asymptotic comparisons. Set `SHOW_EXACT`, `SHOW_BANDS`,
-and `MAX_ITER` to inspect details. It reads the CSV/JSON and never reruns the
+and `MAX_ITER` to inspect details; `OVERVIEW_MAX_ITER` controls the overview.
+It imports the shared `plot_least_squares.py`, so copy that file along with the
+updated notebook. It reads the CSV/JSON and never reruns the
 experiment, submits jobs, or overwrites results. No pandas or widget packages
 are required beyond an existing notebook frontend/kernel and NumPy/Matplotlib.
 
@@ -219,8 +251,8 @@ G_\infty=E_0+\sum_i
 Independent trajectories are the Monte Carlo units; coordinates within a
 trajectory share the feature draw `v` and are NOT treated as independent runs.
 Shading is mean +/- two pointwise standard errors, not simultaneous confidence
-bands. Only plotted values are floored at `1e-30` for log axes; raw CSV values
-are unchanged. Panel C uses matched random streams for cancellation; different
+bands. Nonpositive values are masked on log axes; positive values are not
+floored, and raw CSV values are unchanged. Panel C uses matched random streams for cancellation; different
 markers identify its overlapping TSGD curves.
 
 Tests check shared-noise cancellation, exact recovery of GD, persistence of
