@@ -81,6 +81,11 @@ stored reference information. In their standard forms, these estimates
 are conditionally unbiased, whereas pure TSGD inherits and accumulates
 tracking errors.
 
+Gradient information can also be transported through extrapolation
+(IGT) or Hessian-based control variates. Appendix~\ref{app:related-transport}
+compares these mechanisms with TSGD and discusses the recursive-gradient
+estimator used with I-CGM in federated optimization.
+
 SARAH and SPIDER transport an estimate between full-gradient or
 large-batch recomputations
 \citep{nguyen2017sarah,nguyen2017sarah_nonconvex,fang2018spider}.

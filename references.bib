@@ -265,3 +265,54 @@
   url = 	 {https://proceedings.mlr.press/v300/fradin26a.html},
   abstract = 	 { We study stochastic nonconvex optimization under heavy-tailed noise. In this setting, the stochastic gradients only have bounded p–th central moment ($p$–BCM) for some $p \in (1,2]$. Building on the foundational work of Arjevani et al. (2022) in stochastic optimization, we establish tight sample complexity lower bounds for all first-order methods under relaxed mean-squared smoothness ($q$-WAS) and $\delta$-similarity ($(q,\delta)$-S) assumptions, allowing any exponent $q\in[1,2]$ instead of the standard $q= 2$. These results substantially broaden the scope of existing lower bounds. To complement them, we show that Normalized Stochastic Gradient Descent with Momentum Variance Reduction (NSGD-MVR), a known algorithm, matches these bounds in expectation. Beyond expectation guarantees, we introduce a new algorithm, Double-Clipped NSGD-MVR, which allows the derivation of high-probability convergence rates under weaker assumptions than in previous works. Finally, for second-order methods with stochastic Hessians satisfying bounded $q$-th central moment assumptions for some exponent $q \in[1,2] $ (allowing $q\neq p$), we establish sharper lower bounds than previous works while improving over Sadiev et al. (2025) (where only $p=q$ is considered) and yielding stronger convergence exponents. Together, these results provide a nearly complete complexity characterization of stochastic nonconvex optimization in heavy-tailed regimes. }
 }
+
+@misc{arnold2019reducingvarianceonlineoptimization,
+      title={Reducing the variance in online optimization by transporting past gradients}, 
+      author={Sébastien M. R. Arnold and Pierre-Antoine Manzagol and Reza Babanezhad and Ioannis Mitliagkas and Nicolas Le Roux},
+      year={2019},
+      eprint={1906.03532},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1906.03532}, 
+}
+
+@misc{gower2018trackinggradientsusinghessian,
+      title={Tracking the gradients using the Hessian: A new look at variance reducing stochastic methods}, 
+      author={Robert M. Gower and Nicolas Le Roux and Francis Bach},
+      year={2018},
+      eprint={1710.07462},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/1710.07462}, 
+}
+A
+
+@misc{driggs2020biasedstochasticgradientestimation,
+      title={On Biased Stochastic Gradient Estimation}, 
+      author={Derek Driggs and Jingwei Liang and Carola-Bibiane Schönlieb},
+      year={2020},
+      eprint={1906.01133},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/1906.01133}, 
+}
+
+@misc{zeng2021scalingtransitionmomentumstochastic,
+      title={Scaling transition from momentum stochastic gradient descent to plain stochastic gradient descent}, 
+      author={Kun Zeng and Jinlan Liu and Zhixia Jiang and Dongpo Xu},
+      year={2021},
+      eprint={2106.06753},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2106.06753}, 
+}
+
+@misc{jiang2025nonconvexfederatedoptimizationcostaware,
+      title={Non-Convex Federated Optimization under Cost-Aware Client Selection}, 
+      author={Xiaowen Jiang and Anton Rodomanov and Sebastian U. Stich},
+      year={2025},
+      eprint={2512.05327},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2512.05327}, 
+}

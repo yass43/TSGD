@@ -108,6 +108,11 @@ $\mathbb E[\|\nabla f(\widehat x)\|]\leq\varepsilon$; our squared-norm
 target implies it by Jensen's inequality. Both use shared-sample
 queries, precisely the access needed for TSGD differences.
 
+\citet{arjevani2022lowerboundsnonconvexstochastic} establish an
+$\Omega(\varepsilon^{-3})$ lower bound under mean-squared smoothness.
+However, \eqref{eq:similarity-implies-mean-square-smoothness} places
+our class inside that class; a lower bound for the larger class does
+not by itself transfer to ours with separately prescribed $L$ and $\delta$.
 The following specialization of \citet{pmlr-v300-fradin26a} shows
 that the exponent three is optimal on this same class, not merely
 on a larger mean-squared-smooth class. It applies to zero-respecting

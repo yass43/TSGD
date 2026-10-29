@@ -105,7 +105,8 @@ Under uniform finite-sum sampling, this condition coincides with the
 Hessian-variance condition of
 \citet{szlendak2021permutationcompressorsprovablyfaster} and the
 second-order similarity assumption of
-\citet{khaled2023fasterfederatedoptimizationsecondorder}.
+\citet{khaled2023fasterfederatedoptimizationsecondorder}, as well as
+the average dissimilarity assumption of \citet{jiang2026nonconvex}.
 More recently, \citet{pmlr-v306-shulgin26b} generalized it through
 $\gamma$-similarity, which recovers this condition at $\gamma=1$.
 We use the name \emph{centered $\delta$-similarity} to emphasize that it
@@ -177,7 +178,11 @@ including $x_{k+1}$ and $g_k$. Conditionally unbiased increments give
 \]
 Unlike SGD, TSGD is therefore generally conditionally biased:
 the new increment is unbiased, but the estimator inherits its previous
-error. The increment error $d_{k+1}$ has zero conditional mean and is
+error. Biased estimators, including SARAH, are studied in a unified
+finite-sum framework by
+\citet{driggs2020biasedstochasticgradientestimation}.
+Here the conditional bias is exactly $e_k$.
+The increment error $d_{k+1}$ has zero conditional mean and is
 orthogonal in expectation to previous errors. Consequently,
 \begin{equation}
 \label{eq:transport-error-identity}

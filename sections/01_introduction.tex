@@ -3,7 +3,10 @@
 \label{sec:introduction}
 
 Stochastic gradient descent (SGD) estimates gradients afresh.
-Transported SGD (TSGD) estimates gradient changes and uses them to
+Transported SGD (TSGD)\footnote{The acronym also names the unrelated
+momentum-to-SGD transition method of
+\citet{zeng2021scalingtransitionmomentumstochastic}. Here it means
+transported SGD.} estimates gradient changes and uses them to
 update an existing estimate. SGD is a cornerstone of stochastic
 optimization and a workhorse of machine learning: replacing the exact
 gradient with a stochastic estimate makes each update simple and

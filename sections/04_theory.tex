@@ -167,6 +167,14 @@ is comparable with global similarity
 (Appendix~\ref{subsec:comparing-assumptions}), so these bounds apply under
 different assumptions and do not establish universal superiority.
 
+Under smoothness and BV alone, SGD's $O(\varepsilon^{-4})$ oracle
+complexity for $\mathbb E[\|\nabla f(\widehat x)\|]\leq\varepsilon$
+is minimax optimal in its accuracy dependence
+\citep{arjevani2022lowerboundsnonconvexstochastic}.
+This does not establish optimality under additional similarity.
+For TSGD, Lemma~\ref{lem:multiplicative-tsgd-tuned-exact} establishes
+sharpness for the prescribed stepsize, not for all possible schedules.
+
 \subsection{Computational Considerations}
 \label{subsec:computational-considerations}
 

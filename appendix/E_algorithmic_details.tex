@@ -72,3 +72,53 @@ preconditioning also fall outside the pure-transport assumptions.
 VENUS changes the coupling of fresh and transported samples, and
 therefore their covariance, while preserving shared sampling within
 each difference \citep{venus2026draft}.
+
+\subsection{Further Connections to Gradient Transport}
+\label{app:related-transport}
+
+\paragraph{Implicit gradient transport.}
+IGT \citep{arnold2019reducingvarianceonlineoptimization} averages past
+stochastic gradients and compensates for their staleness by evaluating
+new gradients at extrapolated points. Unlike TSGD, it does not form
+shared-sample differences. Its exact correction is derived for quadratic
+components with a common Hessian (their Assumption~3.1), a case where
+our $\delta=0$. The quadratic restriction matters: $\delta=0$ alone
+also permits a nonlinear common gradient plus an additive random offset,
+and does not ensure that extrapolation corrects staleness exactly.
+Even in the common-Hessian quadratic case, IGT's correction removes
+staleness, not sampling noise. TSGD instead adds sampled gradient
+changes to a single estimate, using two pointwise evaluations per
+increment rather than one at an extrapolated point.
+
+\paragraph{Hessian-based gradient tracking.}
+\citet{gower2018trackinggradientsusinghessian} modify SVRG by using
+Hessian-based linear models to update its gradient control variates
+away from the reference point. The Hessian tracks changes in gradients
+rather than preconditioning the update; diagonal and low-rank
+approximations reduce its computational cost. Both this approach and
+TSGD account for changing gradients, but through different information:
+the former uses a second-order model of reference gradients, whereas
+TSGD uses shared-sample differences and recursively transports one
+estimate without a Hessian model.
+
+\paragraph{The recursive-gradient estimator used with I-CGM.}
+\citet{jiang2026nonconvex} use a recursive-gradient (RG) estimator
+within an inexact composite gradient method for federated optimization.
+In our notation, their Section~5 recursion is
+\[
+g_0=\nabla f(x_0),\qquad
+g_{k+1}=(1-\beta)g_k+\beta H_k+D_{k+1},
+\qquad 0<\beta\leq1,
+\]
+where $H_k$ is an unbiased estimate at the \emph{previous} point $x_k$
+and $D_{k+1}$ is a shared-minibatch gradient difference. As the authors
+note, setting $\beta=0$ gives the SARAH recursion, hence pure transport
+with exact initialization. This identifies the estimator, not the outer
+I-CGM iterate update, with TSGD. Their average dissimilarity assumption
+is centered similarity under uniform finite-sum sampling.
+For effective minibatch similarity constant $\delta_m$, Lemma~5.2
+weights the sum of squared displacements by
+$2\delta_m^2/(2\beta-\beta^2)$. When $\delta_m>0$, this coefficient
+diverges as $\beta\downarrow0$, so that lemma does not cover pure
+transport. The finite-horizon analysis in Section~\ref{sec:tsgd-convergence}
+instead controls accumulation without requiring a positive mixing weight.
