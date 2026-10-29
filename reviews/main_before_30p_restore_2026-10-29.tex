@@ -1,0 +1,58 @@
+% !TEX root = main.tex
+\documentclass[11pt]{article}
+
+\input{preamble}
+\input{theorems}
+\input{macros}
+
+\title{TSGD: The Sister of SGD}
+\author{Yassine Maziane \and Peter Richt\'arik}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Stochastic gradient descent (SGD) estimates gradients. Transported SGD
+(TSGD) estimates their changes and uses them to update an initial gradient
+estimate along the optimization trajectory. Estimating changes can be
+much easier than estimating gradients: even when individual gradients
+are highly noisy, shared additive noise cancels exactly from their
+differences, giving exact transport. With exact initialization as well,
+TSGD follows gradient descent exactly, regardless of the noise magnitude.
+This known recursion appears in several variance-reduced methods; here
+we study it directly as a fundamental estimation mechanism.
+Its accuracy depends on two error sources: initialization error,
+which persists, and transport errors, which accumulate. Centered
+similarity controls the latter through noise variation rather than
+pointwise noise magnitude. We give a clean, unified convergence analysis
+that separates these contributions, and derive exact quadratic dynamics
+that quantify how initialization and transport errors interact.
+Simple examples and least-squares experiments identify regimes
+favoring TSGD or SGD. These results clarify both the value of pure
+transport and why modern optimizers combine it with fresh estimation.
+\end{abstract}
+
+\input{sections/01_introduction}
+\input{sections/02_estimators}
+\input{sections/03_regimes}
+\input{sections/04_theory}
+\input{sections/05_modern_optimizers}
+\input{sections/06_conclusion}
+\label{main-text-end}
+
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\clearpage
+\appendix
+\input{appendix/A_convergence}
+\input{appendix/B_quadratic_dynamics}
+\input{appendix/C_noise_assumptions}
+\input{appendix/D_examples}
+\input{appendix/E_oracle_complexity}
+\input{appendix/E_algorithmic_details}
+
+\end{document}

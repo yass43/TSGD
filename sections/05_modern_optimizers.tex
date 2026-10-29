@@ -5,11 +5,16 @@
 \subsection{Transport Is Already Everywhere}
 \label{subsec:refreshing-and-transporting}
 
-Table~\ref{tab:transport-building-blocks} shows how modern optimizers
-combine fresh estimation, averaging, and transport. Here $H_{k+1}$ is
-a fresh unbiased estimate of $\nabla f(x_{k+1})$, and $D_{k+1}$ is a
-shared-sample gradient difference. The weights $\alpha,\beta\in[0,1]$
-control fresh estimation, while $\gamma$ scales MARS's transport correction.
+Many modern stochastic optimizers combine fresh gradients with
+transported estimates. Their common building blocks are the three
+operations in Figure~\ref{fig:fundamental-estimators}: fresh estimation,
+averaging, and transport. Write $H_{k+1}$ for a fresh unbiased estimate of
+$\nabla f(x_{k+1})$, $D_{k+1}$ for an estimate of its change from $x_k$,
+and $g_k+D_{k+1}$ for the transported estimate. A stochastic gradient
+difference uses the same fresh sample or minibatch at both endpoints.
+Table~\ref{tab:transport-building-blocks} summarizes the resulting
+estimator relationships. Here $\alpha,\beta\in[0,1]$ weight fresh
+estimates, and $\gamma$ scales the MARS transport correction.
 
 \begin{table}[htbp]
 \centering
@@ -61,80 +66,132 @@ batch sizes, stepsizes, and iterate updates belong to each algorithm.}
 \label{tab:transport-building-blocks}
 \end{table}
 
-SARAH and SPIDER use transport between gradient recomputations
-\citep{nguyen2017sarah,nguyen2017sarah_nonconvex,fang2018spider};
-Inexact SARAH allows batch initialization \citep{nguyen2021inexact},
-and Geom-SARAH randomizes phase lengths \citep{horvath2022adaptivity}.
-PAGE refreshes probabilistically \citep{li2021page}, while MARINA
-transports compressed differences \citep{gorbunov2021marina}.
-MVR/STORM averages fresh and transported estimates
-\citep{cutkosky2019momentum}; unclipped MARS includes MSGD at
-$\gamma=0$ and MVR at $\gamma=1$ \citep{yuan2025mars}.
-These identities concern the estimators before clipping or
-preconditioning; cached gradients need not satisfy the shared-sample
-transport assumptions.
-
 SVRG \citep{NIPS2013_ac1dd209} and SAGA
-\citep{defazio2014sagafastincrementalgradient} also exploit gradient
-differences, but do not transport an estimate along successive iterates.
-SVRG uses an anchor point and its full gradient; SAGA uses stored
-component gradients and their average. Their standard estimates are
-conditionally unbiased, whereas TSGD inherits tracking error.
-Gradient differences also appear in decentralized gradient tracking,
-where agents combine local gradient changes with neighbors' information
-to track the network's average gradient \citep{Qu_2018}.
+\citep{defazio2014sagafastincrementalgradient} also use stochastic
+gradient differences to reduce variance. SVRG compares component
+gradients at the current iterate and an anchor point held fixed
+within each epoch, adding the full gradient at that anchor point.
+SAGA instead stores past gradients for individual components and
+combines the sampled component's gradient difference with the average
+of the stored gradients, updating one entry at each iteration.
+Both exploit noise cancellation in gradient differences. Unlike TSGD,
+they do not transport the previous gradient estimate along successive
+iterates: each estimate combines a current component gradient with
+stored reference information. In their standard forms, these estimates
+are conditionally unbiased, whereas pure TSGD inherits and accumulates
+tracking errors.
 
-\paragraph{Practical relevance.}
-SARAH and SARAH+ were evaluated on MNIST and CIFAR-10 classifiers
-\citep{nguyen2017sarah_nonconvex}, PAGE on LeNet, VGG, and ResNet
-\citep{li2021page}, and MARS on GPT-2 language models
-\citep{yuan2025mars}. These experiments use composite optimizers,
-not uninterrupted TSGD: even the paper analyzing SARAH-IN uses
-restarted SARAH/SARAH+ in its neural-network experiments.
-Some practical MARS variants also use different samples in their
-gradient corrections. These results do not establish pure TSGD's
-performance in isolation.
+SARAH and SPIDER transport an estimate between full-gradient or
+large-batch recomputations
+\citep{nguyen2017sarah,nguyen2017sarah_nonconvex,fang2018spider}.
+Inexact SARAH allows batch initialization \citep{nguyen2021inexact},
+while Geom-SARAH randomizes the phase length
+\citep{horvath2022adaptivity}. PAGE refreshes probabilistically
+\citep{li2021page}; MARINA combines exact refreshes with compressed
+gradient differences \citep{gorbunov2021marina}.
+
+MVR/STORM instead averages fresh and transported estimates at each
+iteration \citep{cutkosky2019momentum}. The unclipped MARS estimator
+\citep{yuan2025mars} includes MSGD at $\gamma=0$ and MVR at $\gamma=1$.
+These identities concern the stated sampling: cached gradients,
+clipping, and preconditioning require separate treatment. Sampling
+also affects the noise covariance, as emphasized by the VENUS
+construction \citep{venus2026draft}.
+Appendix~\ref{app:algorithmic-details} gives the precise identities,
+error recursions, and special cases.
+
+Gradient differences also appear in decentralized gradient tracking
+\citep{Qu_2018}, where agents combine changes in their local gradients
+with information from neighboring agents to track the average gradient
+across the network.
+
+\paragraph{Neural-network applications.}
+Transport-based methods have been used to train both image classifiers
+and language models. SARAH and SARAH+ were evaluated on networks with
+one fully connected hidden layer on MNIST and CIFAR-10
+\citep{nguyen2017sarah_nonconvex}; PAGE was evaluated on LeNet, VGG,
+and ResNet architectures \citep{li2021page}; and MARS was evaluated
+on GPT-2 language models \citep{yuan2025mars}.
+These experiments concern composite optimizers, not uninterrupted
+pure TSGD: SARAH variants restart their transport phases, PAGE refreshes
+probabilistically, and MARS combines gradient-difference corrections
+with momentum and preconditioning. In particular, although the
+nonconvex SARAH paper analyzes the pure-transport inner loop SARAH-IN,
+its neural-network experiments use restarted SARAH/SARAH+.
+Some practical MARS variants also approximate the correction using
+gradients computed with different samples, rather than the shared-sample
+increment studied here \citep{yuan2025mars}.
+These applications motivate studying transport as a building block;
+they do not establish the performance of pure TSGD in isolation.
 
 \subsection{Why Combine Fundamental Estimators?}
 \label{subsec:why-combine-estimators}
 
-Modern optimizers combine fresh estimation, averaging, and transport
-through weighted averages or refreshes. Three considerations motivate
-these combinations.
+SGD, MSGD, and TSGD use fresh information, averaging, and transport,
+respectively. Modern optimizers combine them through weighted averages
+or alternate between fresh estimation and transport. Three motivations
+explain why these combinations can be useful.
 
-\emph{Computational efficiency.} Accurate gradient changes may require
-far fewer samples than accurate absolute gradients. Transport can then
-preserve an expensive initial estimate through many cheaper steps,
-despite using two evaluations per sample. More frequent refreshes limit
-error accumulation but reduce this saving.
+\emph{Computational efficiency.} An accurate absolute gradient may
+require a large batch, whereas a small batch can suffice for an accurate
+gradient change. Even with two evaluations per sample, transport can
+then cost much less. SARAH, SPIDER, and PAGE preserve information from
+an expensive gradient estimate through many cheaper transport steps.
+Refreshing more often limits accumulated error but reduces this saving.
 
-\emph{Complementary strengths.} Momentum averages past estimates to
-reduce noise, but can lag behind a rapidly changing gradient. Transport
-accounts for this change, while fresh gradients correct inherited and
-accumulated errors at the cost of introducing pointwise noise.
-MVR, STORM, and MARS combine these roles even in a fixed noise regime.
+\emph{Complementary strengths.} Momentum averages past gradient
+estimates to reduce noise, but its estimate can lag behind the current
+gradient, especially when the gradient changes rapidly. Transport
+accounts for the change in the true gradient, reducing tracking lag while retaining the benefit
+of averaging. Fresh gradients supply absolute information that pure
+transport cannot recover: mixing them in damps initialization and
+accumulated transport errors, while introducing new pointwise noise.
+MVR, STORM, and MARS balance these roles through their mixing weights
+and transport corrections. This complementarity matters even when
+the noise regime remains fixed.
 
-\emph{Changing regimes.} Shorter steps tighten the similarity bound on
-new transport errors without removing old ones. Fresh gradients may
-also improve: their noise vanishes near the minimizer in
-Section~\ref{subsec:multiplicative-noise-comparison}, while transport
-retains a residual. The relative reliability of the two information
-sources can therefore change during a run. Choosing refresh frequencies
-or mixing weights requires balancing their accuracy and cost, generally
-without knowing their errors.
+\emph{Changing regimes.} The relative accuracy of fresh and transported
+estimates can change during a single run. Similarity bounds each new
+transport error in proportion to the squared displacement, so shorter
+steps tighten this bound without removing previously accumulated error.
+Section~\ref{subsec:fixed-variance-variable-similarity} illustrates
+this displacement dependence even when pointwise noise variance stays
+constant. Fresh gradients may also become more reliable: in
+Section~\ref{subsec:multiplicative-noise-comparison}, their noise
+vanishes near the minimizer, while pure transport can retain a nonzero
+tracking error. Thus the balance can change as iterates move, steps
+shrink, and errors accumulate.
+
+Accurate gradient differences can preserve a reliable estimate for many
+iterations. As tracking error accumulates, fresh gradients can help
+correct it. Choosing the mixing weights or refresh frequency means
+balancing this benefit against the cost and noise of fresh estimation.
+The difficulty is that these estimation errors are generally unknown
+during a run.
 
 \paragraph{Improved complexity through refreshing.}
-When BV and centered similarity hold together, SPIDER
-\citep{fang2018spider} and PAGE \citep{li2021page} exploit both assumptions
-by combining accurate gradient recomputations with cheaper transport.
-Refreshes limit how long transport errors accumulate, allowing larger
-steps without an expensive estimate at every iteration.
-Their prescribed batch sizes and refresh schedules give
-$O(\varepsilon^{-3})$ oracle complexity, compared with the
-$O(\varepsilon^{-4})$ guarantees for SGD and pure TSGD in
-Section~\ref{sec:tsgd-convergence}.
-The exponent three matches the lower bound of
-\citet{pmlr-v300-fradin26a} for zero-respecting algorithms on the same
-class (Appendix~\ref{app:common-class-lower-bound}).
-This comparison motivates combining estimators; it is not an
-$\Omega(\varepsilon^{-4})$ lower bound for pure TSGD.
+When bounded variance and centered similarity hold together, combining
+estimators can improve the available convergence guarantees on the same
+problem class. SGD repeatedly obtains fresh gradient information but
+does not explicitly exploit accurate shared-sample gradient differences.
+Pure TSGD exploits these differences, but obtains absolute-gradient
+information only through initialization. It retains initialization
+error and accumulates transport noise.
+
+SPIDER \citep{fang2018spider} and PAGE \citep{li2021page} combine
+transport with periodic or probabilistic refreshing. An accurate
+gradient estimate can then support many inexpensive transport steps,
+while each refresh replaces the inherited error with the error of a
+fresh estimate. This limits how long transport errors accumulate and
+allows larger steps without requiring an expensive gradient estimate
+at every iteration.
+With suitable batch sizes and refresh schedules,
+these methods attain $O(\varepsilon^{-3})$ oracle complexity, compared
+with the $O(\varepsilon^{-4})$ guarantees for SGD and pure TSGD in
+Section~\ref{sec:tsgd-convergence}. This $\varepsilon^{-3}$ dependence
+matches the lower bound of
+\citet{pmlr-v300-fradin26a} for zero-respecting algorithms on this
+same problem class; Appendix~\ref{app:common-class-lower-bound} gives the
+precise statement. The comparison shows
+how combining the mechanisms can improve a guarantee; it does not
+establish an $\Omega(\varepsilon^{-4})$ lower bound for pure TSGD.

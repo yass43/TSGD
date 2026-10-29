@@ -105,12 +105,18 @@ estimate lowers TSGD's residual error.
 Thus, TSGD's sensitivity to gradient-noise magnitude depends on how
 its initial estimate is constructed.
 
-The three terms represent deterministic optimization, transport noise,
-and initialization error. Small $\delta$ permits larger steps;
-$\delta=E_0=0$ recovers GD at $\eta=1/L$. The coefficient of $E_0$
-is sharp (Appendix~\ref{app:quadratic-dynamics}). For $\delta>0$,
-the theorem requires a smaller step for a longer horizon; it does not
-assert asymptotic stationarity for an infinite fixed-step run.
+The terms correspond to deterministic optimization, accumulated
+transport noise, and initialization error. Small $\delta$ permits larger
+steps and a smaller transport contribution. With $\delta=0$, the
+admissible step is $1/L$; if also $E_0=0$, we recover gradient descent.
+The additive $E_0$ term reflects the error that pure transport preserves,
+and its coefficient is sharp (Appendix~\ref{app:quadratic-dynamics}).
+The guarantee approaches $E_0$ as the horizon grows. This floor can be
+attained even with exact transport, as
+Section~\ref{subsec:four-case-summary} shows. Stochastic transport can
+create an additional floor when the stepsize is held fixed. For
+$\delta>0$, the theorem controls this accumulation by choosing a
+smaller stepsize for a longer run.
 
 Related single-run guarantees appear in SARAH-IN, iSARAH-IN, and
 PAGE-NS \citep{nguyen2017sarah_nonconvex,nguyen2021inexact,sokolov2022nonconvex}.
@@ -164,8 +170,12 @@ different assumptions and do not establish universal superiority.
 \subsection{Computational Considerations}
 \label{subsec:computational-considerations}
 
-Shared-sample transport uses two gradient evaluations per increment,
-but accurate differences may require fewer samples than accurate
-absolute gradients. Its cost must be considered together with that of
-initialization. Appendix~\ref{app:oracle-complexity} compares the
-guarantees at equal oracle budgets rather than only equal iterations.
+TSGD requires an initial estimate and, in the shared pointwise-oracle
+implementation, two gradient evaluations per transport increment.
+Accurate differences may nevertheless need far fewer samples than
+accurate absolute gradients: small-batch transport can preserve
+information obtained from a more expensive initial estimate. The
+benefit depends on both its initial cost and the subsequent accuracy
+of the differences. Iteration counts alone therefore do not compare
+computational work. Appendix~\ref{app:oracle-complexity} gives batch
+initialization costs and comparisons at equal oracle budgets.

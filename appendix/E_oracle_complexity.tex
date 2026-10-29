@@ -1,18 +1,37 @@
 % !TEX root = ../main.tex
-\section{Oracle Complexity}
+\section{Oracle Complexity and Additional Algorithmic Details}
 \label{app:oracle-complexity}
 
-\subsection{Initialization and Evaluation Costs}
+\subsection{Initialization and Accuracy Targets}
 \label{app:initialization-cost}
 
-Averaging $B_0$ independent unbiased gradients at $x_0$, independently
-of subsequent samples, gives $E_0\leq\sigma_0^2/B_0$, where $\sigma_0^2$
-bounds the variance at $x_0$. Thus
+Suppose an unbiased oracle at $x_0$ has variance at most $\sigma_0^2$.
+With $B_0$ independent samples, independent also of subsequent
+transport samples, set
+\[
+g_0=\frac1{B_0}\sum_{i=1}^{B_0}h(x_0,\xi_i^{(0)}).
+\]
+Independence and centering cancel the cross terms, giving
+\[
+E_0=\mathbb E[\|g_0-\nabla f(x_0)\|^2]
+\leq\frac{\sigma_0^2}{B_0}.
+\]
+Thus
 $B_0\geq\max\{1,\lceil3\sigma_0^2/\varepsilon^2\rceil\}$
-suffices for Corollary~\ref{cor:tsgd-iteration-complexity}.
-For $K$ updates, SGD uses $K$ evaluations and shared-sample TSGD uses
-$B_0+2(K-1)$; the last transport correction is unused.
-Combining these costs with the iteration bounds, under BV,
+ensures $E_0\leq\varepsilon^2/3$, as required by
+Corollary~\ref{cor:tsgd-iteration-complexity}. Only the variance at
+$x_0$ is needed for this construction. The main theorem itself
+requires neither unbiased initialization nor a pointwise oracle.
+
+Count $K$ iterate updates. Single-sample SGD uses $K$ pointwise
+gradient evaluations, whereas the shared-sample TSGD construction
+uses at most $B_0+2(K-1)$. Its final correction $D_K$ is unused:
+$g_{K-1}$ suffices to compute $x_K$, and the output is selected from
+$x_0,\ldots,x_{K-1}$. Under the common BV assumption, one can take
+$\sigma_0^2\leq\sigma^2$. Combining the batch size above with
+\eqref{eq:tsgd-iteration-complexity} and
+\eqref{eq:sgd-iteration-complexity} gives sufficient evaluation
+budgets of order
 \begin{equation}
 \label{eq:comparison-oracle-complexities}
 \begin{aligned}
@@ -20,59 +39,137 @@ N_{\mathrm{SGD}}(\varepsilon)
  &=O\!\left(1+\frac{L\Delta_0}{\varepsilon^2}
               +\frac{L\Delta_0\sigma^2}{\varepsilon^4}\right),\\
 N_{\mathrm{TSGD}}(\varepsilon)
- &=O\!\left(1+\frac{\sigma^2+L\Delta_0}{\varepsilon^2}
+ &=O\!\left(1+\frac{\sigma^2}{\varepsilon^2}
+              +\frac{L\Delta_0}{\varepsilon^2}
               +\frac{\delta^2\Delta_0^2}{\varepsilon^4}\right).
 \end{aligned}
 \end{equation}
-These are sufficient budgets, not lower bounds.
-At a common budget $N\geq\max\{1,B_0\}$, the corresponding horizons
-are $K_{\mathrm{SGD}}=N$ and
-$K_{\mathrm{TSGD}}=1+\lfloor(N-B_0)/2\rfloor$.
-Initialization accuracy and cost must therefore both enter the comparison.
+These are upper bounds for the stated implementations, not oracle
+lower bounds. The initialization term depends on this choice of
+$g_0$ and can change when other initial gradient information is
+available.
 
-\subsection{Why Refreshing Can Improve Complexity}
+\subsection{Comparisons at Equal Iterations and Oracle Budgets}
+\label{subsec:noise-mechanisms}
+\label{subsec:fair-oracle-comparison}
+
+When BV and global similarity both hold, let $U_{\mathrm{SGD}}(K)$
+and $U_{\mathrm{TSGD}}(K)$ denote the optimized upper bounds in
+\eqref{eq:sgd-bv-optimized-bound} and \eqref{eq:tsgd-optimized-bound}.
+At equal iteration counts, subtracting gives
+\begin{equation}
+\label{eq:optimized-certificate-comparison}
+U_{\mathrm{TSGD}}(K)<U_{\mathrm{SGD}}(K)
+\quad\Longleftrightarrow\quad
+E_0<\frac{\Delta_0}{K}
+\left[\sqrt{L^2+\frac{2KL\sigma^2}{\Delta_0}}
+-\sqrt{L^2+4(K-1)\delta^2}\right].
+\end{equation}
+With exact initialization, this reduces to
+$2(K-1)\delta^2\Delta_0<KL\sigma^2$.
+At an evaluation budget $N\geq\max\{1,B_0\}$, the horizons are instead
+\begin{equation}
+\label{eq:equal-budget-horizons}
+K_{\mathrm{SGD}}=N,\qquad
+K_{\mathrm{TSGD}}=1+\left\lfloor\frac{N-B_0}{2}\right\rfloor.
+\end{equation}
+For positive $\delta,\sigma,\Delta_0$, if $B_0=o(N)$ and
+$E_0=o(N^{-1/2})$, the leading bounds are
+$\sqrt{2L\Delta_0\sigma^2/N}$ for SGD and
+$2\sqrt2\delta\Delta_0/\sqrt N$ for TSGD.
+Thus the leading TSGD bound is smaller when
+$4\delta^2\Delta_0<L\sigma^2$, versus
+$2\delta^2\Delta_0<L\sigma^2$ at equal iterations.
+These are comparisons of upper bounds, not predictions of actual
+performance. A fixed positive $E_0$ does not satisfy the asymptotic
+condition, and exact initialization must also have its cost counted.
+
+\subsection{Refreshing Improves Complexity on a Common Problem Class}
 \label{app:common-class-lower-bound}
 
-When BV and centered similarity hold together, unbiasedness gives
-\[
+Consider objectives with initial gap at most $\Delta$, smoothness
+constant at most $L$, and unbiased oracles satisfying BV and centered
+$\delta$-similarity. Unbiasedness gives
+\begin{equation}
+\label{eq:similarity-implies-mean-square-smoothness}
+\begin{aligned}
 \mathbb E[\|h(x,\xi)-h(y,\xi)\|^2]
-=\|\nabla f(x)-\nabla f(y)\|^2+
-\mathbb E[\|r(x,\xi)-r(y,\xi)\|^2]
-\leq(L^2+\delta^2)\|x-y\|^2.
-\]
+&=\|\nabla f(x)-\nabla f(y)\|^2
+  +\mathbb E[\|r(x,\xi)-r(y,\xi)\|^2]\\
+&\leq(L^2+\delta^2)\|x-y\|^2.
+\end{aligned}
+\end{equation}
 The mean-squared-smoothness guarantees of SPIDER and PAGE therefore
-give $O(\varepsilon^{-3})$ complexity on this same class
-\citep{fang2018spider,li2021page}, with shared-sample access.
-The target is $\mathbb E[\|\nabla f(\widehat x)\|]\leq\varepsilon$;
-our squared-norm target implies it by Jensen's inequality.
+apply \citep{fang2018spider,li2021page}: they give
+$O(\varepsilon^{-3})$ complexity, compared with the
+$O(\varepsilon^{-4})$ bounds in \eqref{eq:comparison-oracle-complexities}.
+Here the accuracy target is
+$\mathbb E[\|\nabla f(\widehat x)\|]\leq\varepsilon$; our squared-norm
+target implies it by Jensen's inequality. Both use shared-sample
+queries, precisely the access needed for TSGD differences.
 
-\begin{corollary}[Fradin et al., Theorem 3.2, specialized]
+The following specialization of \citet{pmlr-v300-fradin26a} shows
+that the exponent three is optimal on this same class, not merely
+on a larger mean-squared-smooth class. It applies to zero-respecting
+algorithms, which introduce only coordinates revealed by past oracle
+responses when started at the origin, rather than to all randomized
+algorithms.
+
+\begin{corollary}[Specialization of Fradin et al., Theorem 3.2]
 \label{cor:common-class-lower-bound}
-Fix positive bounds $\Delta,L,\sigma,\delta$ on the initial gap,
-smoothness, BV, and centered similarity. For sufficiently small
-$\varepsilon>0$, zero-respecting algorithms require
-$\Omega(\Delta\delta\sigma/\varepsilon^3)$ evaluations in the worst
-case to achieve either target above. The oracle allows any fixed
-finite number of simultaneous shared-sample queries per round,
-with independent samples across rounds.
+Fix $\Delta,L,\sigma,\delta>0$. For all sufficiently small
+$\varepsilon>0$, any zero-respecting algorithm that guarantees
+$\mathbb E[\|\nabla f(\widehat x)\|]\leq\varepsilon$ uniformly over
+the class satisfying
+Assumptions~\ref{ass:smooth-objective}--\ref{ass:oracle-similarity}
+and $f(x_0)-f_{\inf}\leq\Delta$ requires
+\begin{equation}
+\label{eq:common-class-oracle-lower-bound}
+\Omega\!\left(\frac{\Delta\delta\sigma}{\varepsilon^3}\right)
+\end{equation}
+stochastic-gradient evaluations in the worst case.
+The oracle permits any fixed finite number of simultaneous query
+points sharing the same sample, with independent samples across rounds.
+The same lower bound holds for the stronger target
+$\mathbb E[\|\nabla f(\widehat x)\|^2]\leq\varepsilon^2$.
 \end{corollary}
+
 \begin{proof}
-Set $p=q=2$, $L_1=L$, and $\sigma_1=\sigma$ in
-\citet[Theorem~3.2]{pmlr-v300-fradin26a}. Their moment and similarity
-conditions become BV and centered similarity, and the bound is
+Set $p=q=2$ in Theorem~3.2 of \citet{pmlr-v300-fradin26a}.
+Their bounded central moment and $(q,\delta)$-similarity assumptions
+then become BV and centered $\delta$-similarity, respectively.
+With $L_1=L$ and $\sigma_1=\sigma$, their lower bound is
 \[
-\Omega\!\left(\min\left\{
-\frac{L\Delta}{\varepsilon^2}+\frac{L\Delta\sigma^2}{\varepsilon^4},
+\Omega\!\left(
+\min\left\{
+\frac{L\Delta}{\varepsilon^2}
++\frac{L\Delta\sigma^2}{\varepsilon^4},
+\quad
 \frac{\sigma^2+(L+\delta)\Delta}{\varepsilon^2}
-+\frac{\delta\Delta\sigma}{\varepsilon^3}\right\}\right).
++\frac{\delta\Delta\sigma}{\varepsilon^3}
+\right\}
+\right).
 \]
-For fixed positive parameters and sufficiently small $\varepsilon$,
-the second branch is smaller and its cubic term dominates.
-The theorem's restriction $\varepsilon\leq c_1\sqrt{L\Delta}$ is then
-satisfied. Each query round requires at least one evaluation;
-Jensen's inequality extends the lower bound to the squared-norm target.
+The theorem applies for $0<\varepsilon\leq c_1\sqrt{L\Delta}$
+with a universal $c_1>0$.
+For fixed positive parameters, the first branch grows as
+$L\Delta\sigma^2/\varepsilon^4$, whereas the second is asymptotic to
+$\delta\Delta\sigma/\varepsilon^3$. Their ratio tends to infinity,
+so the minimum is the second branch for sufficiently small
+$\varepsilon$, giving the claimed bound.
+The lower bound counts shared-sample query rounds, each requiring
+at least one gradient evaluation, so it also bounds the evaluation
+count. Finally,
+$\mathbb E[\|\nabla f(\widehat x)\|]
+\leq\sqrt{\mathbb E[\|\nabla f(\widehat x)\|^2]}$
+extends the bound to the squared-norm criterion.
 \end{proof}
-Zero-respecting algorithms introduce only coordinates revealed by past
-oracle responses when started at the origin; this is not a lower bound
-for all randomized algorithms. It establishes optimality of the exponent
-three for this class, not an $\varepsilon^{-4}$ lower bound for pure TSGD.
+
+Together with the SPIDER/PAGE upper bounds,
+Corollary~\ref{cor:common-class-lower-bound} establishes optimality
+of the $\varepsilon^{-3}$ exponent among zero-respecting algorithms
+on this common class as $\varepsilon\to0$, with the positive bounds
+$\Delta,L,\sigma,\delta$ held fixed. This does not establish an
+$\Omega(\varepsilon^{-4})$ lower bound for pure TSGD; its
+$O(\varepsilon^{-4})$ guarantee need not be tight, and exact transport
+can already yield faster convergence.
