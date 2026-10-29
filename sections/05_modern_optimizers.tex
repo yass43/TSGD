@@ -70,8 +70,9 @@ transports compressed differences \citep{gorbunov2021marina}.
 MVR/STORM averages fresh and transported estimates
 \citep{cutkosky2019momentum}; unclipped MARS includes MSGD at
 $\gamma=0$ and MVR at $\gamma=1$ \citep{yuan2025mars}.
-Appendix~\ref{app:algorithmic-details} gives the error recursions
-and explains why sample coupling, cached gradients, and clipping matter.
+These identities concern the estimators before clipping or
+preconditioning; cached gradients need not satisfy the shared-sample
+transport assumptions.
 
 SVRG \citep{NIPS2013_ac1dd209} and SAGA
 \citep{defazio2014sagafastincrementalgradient} also exploit gradient

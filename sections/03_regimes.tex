@@ -110,11 +110,9 @@ however, has exact transport at $\omega=0$, while its similarity
 constant grows as $\delta=\sigma\omega$. Its actual
 transport error depends on the displacement through the sine term.
 
-Simulations in Appendix~\ref{app:sinusoid} (Figure~\ref{fig:sinusoid})
-confirm this distinction. At small frequencies, TSGD retains accurate
-information despite persistent pointwise noise; at $\omega=2$, its error
-exceeds SGD's. Thus, at the same pointwise noise level and stepsize,
-changing the noise variation changes which method performs better.
+Thus pointwise noise distributions alone do not determine transport
+accuracy: they leave unchanged SGD's fresh estimates while permitting
+arbitrarily different similarity constants.
 
 \subsection{When Fresh Gradients Are Preferable}
 \label{subsec:multiplicative-noise-comparison}

@@ -1,0 +1,153 @@
+% !TEX root = ../main.tex
+\section{Detailed Convergence Proofs}
+\label{app:convergence-proofs}
+
+\subsection{Descent and Weighted Accumulation}
+\label{subsec:descent-and-accumulation}
+
+Fix deterministic $x_0$, horizon $K\geq1$, and constant step $\eta>0$.
+Finite second moments follow inductively from smoothness, similarity,
+and $E_0<\infty$. Write $q_k=\mathbb E[\|d_{k+1}\|^2]$.
+Conditional unbiasedness gives
+$\mathbb E[\langle e_k,d_{k+1}\rangle]=0$, so $E_{k+1}=E_k+q_k$.
+Smoothness and
+$2\langle\nabla f(x_k),g_k\rangle
+=\|\nabla f(x_k)\|^2+\|g_k\|^2-\|e_k\|^2$
+give \eqref{eq:tsgd-fundamental-descent}. Summing the error identity yields
+\begin{equation}
+\label{eq:weighted-error-accumulation}
+\sum_{k=0}^{K-1}E_k
+=KE_0+\sum_{t=0}^{K-2}(K-1-t)q_t,
+\end{equation}
+where the sum is empty for $K=1$, and similarity gives
+\begin{equation}
+\label{eq:transport-error-step-bound}
+q_t\leq\delta^2\mathbb E[\|x_{t+1}-x_t\|^2]=\delta^2\eta^2M_t.
+\end{equation}
+
+\subsection{Proof of Theorem~\ref{thm:tsgd-stationarity}}
+
+Sum \eqref{eq:tsgd-fundamental-descent}, substitute
+\eqref{eq:weighted-error-accumulation}--\eqref{eq:transport-error-step-bound},
+and collect the coefficients of $M_k$. This gives
+\begin{equation}
+\label{eq:tsgd-full-bound}
+\frac1K\sum_{k=0}^{K-1}G_k+\frac{2F_K}{\eta K}
++\frac1K\sum_{k=0}^{K-1}c_kM_k
+\leq\frac{2\Delta_0}{\eta K}+E_0,
+\end{equation}
+where $c_k=1-L\eta-\delta^2\eta^2(K-1-k)$.
+The stepsize condition makes every $c_k$ nonnegative. Dropping
+these terms and $F_K\geq0$ proves the theorem.
+
+\subsection{Exact Optimized TSGD Guarantee}
+\label{subsec:optimized-tsgd-guarantees}
+
+The largest positive step satisfying
+$L\eta+(K-1)\delta^2\eta^2\leq1$ is
+\begin{equation}
+\label{eq:tsgd-optimal-step}
+\boxed{\eta^\star
+ =\frac{2}{L+\sqrt{L^2+4(K-1)\delta^2}}.}
+\end{equation}
+This is the positive quadratic root when $(K-1)\delta^2>0$
+and equals $1/L$ otherwise. It optimizes the sufficient condition,
+not the actual stability limit.
+Substitution into \eqref{eq:tsgd-stationarity-bound} yields
+\begin{equation}
+\label{eq:tsgd-optimized-bound}
+\overline G_K^{\mathrm{TSGD}}
+\leq\frac{\Delta_0}{K}
+   \left(L+\sqrt{L^2+4(K-1)\delta^2}\right)+E_0.
+\end{equation}
+Using
+\[
+\sqrt{L^2+4(K-1)\delta^2}\leq L+2\delta\sqrt{K-1},
+\qquad \frac{\sqrt{K-1}}K\leq\frac1{\sqrt K},
+\]
+gives \eqref{eq:tsgd-simplified-bound}.
+\subsection{SGD under Bounded Variance}
+\label{app:sgd-convergence}
+
+Under Assumptions~\ref{ass:smooth-objective}--\ref{ass:bounded-variance},
+let $F_k,G_k$ now refer to the SGD iterates. Conditional unbiasedness
+and BV imply
+\[
+\mathbb E_\xi[\|h(x_k,\xi)\|^2\mid x_k]
+\leq\|\nabla f(x_k)\|^2+\sigma^2.
+\]
+Consequently,
+\[
+F_{k+1}\leq F_k-\eta\left(1-\frac{L\eta}{2}\right)G_k
+                    +\frac{L\eta^2\sigma^2}{2}.
+\]
+Summing and dropping $F_K\geq0$ yields, for $0<\eta<2/L$,
+\begin{equation}
+\label{eq:sgd-bv-bound}
+\boxed{\overline G_K^{\mathrm{SGD}}
+\leq\frac{2\Delta_0+KL\eta^2\sigma^2}{\eta K(2-L\eta)}.}
+\end{equation}
+In particular, the fixed gradient-descent step $\eta=1/L$ gives
+\begin{equation}
+\label{eq:sgd-bv-fixed-step}
+\overline G_K^{\mathrm{SGD}}
+\leq\frac{2L\Delta_0}{K}+\sigma^2.
+\end{equation}
+
+For $\Delta_0>0$, differentiating the bound shows that its minimum
+satisfies $L\sigma^2\eta^2=(2\Delta_0/K)(1-L\eta)$, giving
+\begin{equation}
+\label{eq:sgd-bv-optimal-step}
+\boxed{\eta_{\mathrm{BV},K}^*
+ =\frac{2}{L+\sqrt{L^2+2KL\sigma^2/\Delta_0}}.}
+\end{equation}
+At this step the bound equals $2\Delta_0/(K\eta)$, hence
+\begin{equation}
+\label{eq:sgd-bv-optimized-bound}
+\boxed{\overline G_K^{\mathrm{SGD}}
+\leq\frac{\Delta_0}{K}
+ \left(L+\sqrt{L^2+\frac{2KL\sigma^2}{\Delta_0}}\right)
+\leq\frac{2L\Delta_0}{K}
+     +\sqrt{\frac{2L\Delta_0\sigma^2}{K}}.}
+\end{equation}
+The last inequality uses $\sqrt{a+b}\leq\sqrt a+\sqrt b$.
+For $\sigma=0$ the step is $1/L$; for $\sigma>0$ it decreases
+with $K$. If $\Delta_0=0$, the initial point is already stationary
+and the optimized formula is not used.
+
+\subsection{Iteration Complexity}
+\label{subsec:tsgd-complexity}
+
+Fix an accuracy target $\varepsilon>0$ and let $R$ be uniform on
+$\{0,\ldots,K-1\}$, independent of the run.
+Then $\mathbb E[\|\nabla f(x_R)\|^2]=\overline G_K$.
+
+\begin{corollary}[Sufficient TSGD horizon]
+\label{cor:tsgd-iteration-complexity}
+Under Theorem~\ref{thm:tsgd-stationarity}, suppose
+$E_0\leq\varepsilon^2/3$ and use $\eta=\eta^\star$. An integer
+horizon satisfying
+\begin{equation}
+\label{eq:tsgd-iteration-complexity}
+K\geq\max\left\{1,\frac{6L\Delta_0}{\varepsilon^2},
+                      \frac{36\delta^2\Delta_0^2}{\varepsilon^4}\right\}
+\end{equation}
+ensures $\mathbb E[\|\nabla f(x_R)\|^2]\leq\varepsilon^2$.
+\end{corollary}
+\begin{proof}
+Each of the first two terms in \eqref{eq:tsgd-simplified-bound} is
+at most $\varepsilon^2/3$ under \eqref{eq:tsgd-iteration-complexity};
+the initialization term satisfies the same bound by assumption.
+\end{proof}
+
+For SGD with $\Delta_0>0$ and step \eqref{eq:sgd-bv-optimal-step},
+the analogous sufficient horizon is
+\begin{equation}
+\label{eq:sgd-iteration-complexity}
+K\geq\max\left\{1,\frac{4L\Delta_0}{\varepsilon^2},
+                      \frac{8L\Delta_0\sigma^2}{\varepsilon^4}\right\}.
+\end{equation}
+Each of the two terms in the simplified SGD bound is then at most
+$\varepsilon^2/2$. These are iteration upper bounds; initialization
+and per-iteration oracle costs are accounted for in
+Appendix~\ref{app:oracle-complexity}.

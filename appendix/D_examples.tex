@@ -244,44 +244,6 @@ The sine factor also shows that
 increasing $\omega$ need not increase every realized increment's
 error monotonically.
 
-\subsection{Numerical Illustration of Fixed Variance and Variable Similarity}
-\label{app:sinusoid}
-\label{app:numerical-details}
-
-Can noise variation change the relative performance of SGD and TSGD
-when pointwise noise stays the same? We use the oracle
-\eqref{eq:fixed-variance-oracle} with $L=\sigma=x_0=1$,
-$\eta=0.1$, and $\omega\in\{0,0.5,1,2\}$, so $\delta=\omega$.
-All methods start from the exact estimate
-\[
-g_0=\tfrac12\bigl(h(x_0,\varphi_0)+h(x_0,\varphi_0+\pi)\bigr)=Lx_0.
-\]
-This initialization exploits the oracle's antithetic symmetry; two
-independent samples would not give an exact gradient. Subsequent phases
-are independent and uniform, with a shared phase within each transport
-difference. The horizontal axis counts the two initialization
-evaluations, then one evaluation per subsequent SGD update and two
-per TSGD update. Curves average $10^5$ independent runs, with pointwise
-bands of $\pm2$ Monte Carlo standard errors.
-
-Figure~\ref{fig:sinusoid} shows that SGD is unaffected by $\omega$,
-whereas TSGD follows GD at $\omega=0$ and accumulates error at nonzero
-frequencies. At the final budget, TSGD has smaller error than SGD for
-$\omega=0.5$ and larger error for $\omega=2$. Thus identical pointwise
-noise distributions can conceal very different transport accuracy.
-This is a constant-stepsize illustration, not a comparison of
-optimally tuned methods.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.9\linewidth]{figures/similarity_experiment.pdf}
-\caption{Fixed pointwise noise, variable similarity. Changing
-$\omega$ leaves SGD's law unchanged but changes TSGD's transport
-accuracy. All methods use exact antithetic initialization and
-$\eta=0.1$; the horizontal axis includes initialization costs.}
-\label{fig:sinusoid}
-\end{figure}
-
 \subsection{Least-Squares Experiments}
 \label{app:ls}
 
@@ -339,19 +301,41 @@ cancels from every difference; its remaining error comes from feature
 variability. SGD's residual grows with label noise and vanishes at $s=0$.
 
 \paragraph{Initialization and similarity.}
-Figure~\ref{fig:ls-errors} varies $\delta\in\{0.05,0.9\}$ and a prescribed
-initial error $E_0\in\{10^{-3},10^{-1}\}$.
-Appendix~\ref{app:quad-numerics} gives the exact residuals.
-Unlike the sampled initializations in the first two experiments,
-this experiment and the label-noise experiment use controlled estimates
-to isolate mechanisms, without modeling how that accuracy is obtained.
+\label{app:quad-numerics}
+Figure~\ref{fig:ls-errors} prescribes
+$g_0=Hx_0+e_0$, with $e_0\sim\mathcal N(0,(E_0/10)I_{10})$,
+independently of subsequent samples. We vary
+$\delta=\kappa\in\{0.05,0.9\}$ and $E_0\in\{10^{-3},10^{-1}\}$.
+Applying \eqref{eq:quadratic-interaction} coordinatewise gives
+\begin{equation}
+\label{eq:least-squares-residual}
+\lim_kG_k=E_0+\sum_{j=1}^{10}
+\frac{\eta\kappa^2\lambda_j}
+ {2-\eta(1+\kappa^2)\lambda_j}
+\left(\lambda_j^2x_{0,j}^2+\frac{E_0}{10}\right).
+\end{equation}
+The denominators are positive for our parameters.
+The plateaus agree with these limits: better initialization reduces both
+inherited and transport error, while smaller $\delta$ reduces the
+transport contribution. This experiment and the label-noise experiment
+use controlled estimates, unlike the sampled initialization in the
+other two; they do not model how the initial accuracy is obtained.
 
 \begin{figure}[t]
-  \centering
-  \includegraphics[width=0.72\linewidth]{figures/least_squares_A.pdf}
-  \caption{Initialization quality on vector least squares with noisy
-  labels. TSGD is initialized by averaging $B_0$ independent samples.
-  Means over 4,000 trajectories with pointwise bands of $\pm2$ standard
-  errors.}
-  \label{fig:ls-init}
+\centering
+\begin{minipage}{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/least_squares_A.pdf}
+\caption{Sampled initialization: increasing $B_0$ lowers the residual
+when differences are accurate.}
+\label{fig:ls-init}
+\end{minipage}\hfill
+\begin{minipage}{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{figures/least_squares_D.pdf}
+\caption{Controlled initialization: varying $E_0$ and $\delta$.
+Dotted lines give the exact limits in
+\eqref{eq:least-squares-residual}.}
+\label{fig:ls-errors}
+\end{minipage}
 \end{figure}

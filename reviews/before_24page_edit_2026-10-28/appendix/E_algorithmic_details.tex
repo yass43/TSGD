@@ -1,0 +1,74 @@
+% !TEX root = ../main.tex
+\subsection{Error Recursions for Refreshing and Mixing}
+\label{app:algorithmic-details}
+
+Table~\ref{tab:transport-building-blocks} gives the estimator identities.
+Here we record how these operations affect tracking error. Write
+$u_{k+1}:=H_{k+1}-\nabla f(x_{k+1})$,
+$q_k:=\mathbb E[\|d_{k+1}\|^2]$, and
+$v_{k+1}:=\mathbb E[\|u_{k+1}\|^2]$.
+Both $u_{k+1}$ and $d_{k+1}$ are conditionally unbiased given
+$\mathcal F_k$.
+
+\paragraph{Restarts and probabilistic refreshing.}
+Within a transport phase starting at $s$, the martingale identity gives
+\begin{equation}
+\label{eq:restart-error-window}
+E_k=E_s+\sum_{t=s}^{k-1}q_t.
+\end{equation}
+An exact refresh resets $E_s$ to zero; an independent batch of size
+$B$ gives $E_s\leq\sigma^2/B$ under BV. This limits the accumulation
+window without undoing the effect of past errors on the iterates.
+For PAGE, an independent Bernoulli decision selects a fresh estimate
+with probability $p$ and transport otherwise \citep{li2021page}.
+Conditioning on that decision yields
+\begin{equation}
+\label{eq:refresh-error-recursion}
+E_{k+1}=(1-p)(E_k+q_k)+p\,v_{k+1}.
+\end{equation}
+The branches are mutually exclusive, so their noises have no cross
+term. MARINA uses the same principle with exact refreshes and
+unbiased compressed gradient differences \citep{gorbunov2021marina}.
+Unbiased compression ensures the conditional mean, but a similarity
+bound also requires control of compression variance and local gradients.
+
+\paragraph{Mixing fresh and transported estimates.}
+For MVR/STORM with deterministic fresh weight $\alpha$,
+subtracting the true gradient from the update in
+Table~\ref{tab:transport-building-blocks} gives
+\begin{equation}
+\label{eq:mvr-error-recursion}
+e_{k+1}=(1-\alpha)e_k+(1-\alpha)d_{k+1}+\alpha u_{k+1}.
+\end{equation}
+Conditional unbiasedness removes cross terms with $e_k$, hence
+\[
+\begin{split}
+E_{k+1}={}&(1-\alpha)^2(E_k+q_k)+\alpha^2v_{k+1}\\
+&+2\alpha(1-\alpha)\mathbb E[\langle d_{k+1},u_{k+1}\rangle].
+\end{split}
+\]
+Unlike probabilistic refreshing, mixing uses both noises together.
+With shared sampling their covariance cannot generally be discarded.
+For history-dependent weights, this identity holds conditionally;
+the weights remain inside expectations when averaging over the history.
+
+\paragraph{Scaled transport within momentum.}
+The unclipped MARS estimator in
+Table~\ref{tab:transport-building-blocks} interpolates between MSGD
+at $\gamma=0$ and MVR at $\gamma=1$. For $0\leq\gamma\leq1$,
+\[
+g_{k+1}^{\mathrm{MARS}}
+=(1-\gamma)g_{k+1}^{\mathrm{MSGD}}
++\gamma g_{k+1}^{\mathrm{MVR}},
+\]
+where the two candidates use the same incoming estimate, sample,
+and fresh weight $\beta$ \citep{venus2026draft}.
+Pure transport is the $(\beta,\gamma)=(0,1)$ limit of this expanded
+identity, not a substitution into MARS's original rescaled formula,
+which is undefined at $\beta=0$.
+A scaled difference with $\gamma\ne1$ is generally not an unbiased
+estimate of the gradient change. Cached samples, clipping, and
+preconditioning also fall outside the pure-transport assumptions.
+VENUS changes the coupling of fresh and transported samples, and
+therefore their covariance, while preserving shared sampling within
+each difference \citep{venus2026draft}.

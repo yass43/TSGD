@@ -1,0 +1,139 @@
+% !TEX root = ../main.tex
+\section{TSGD as a Building Block of Modern Optimizers}
+\label{sec:connections}
+
+\subsection{Transport Is Already Everywhere}
+\label{subsec:refreshing-and-transporting}
+
+Table~\ref{tab:transport-building-blocks} shows how modern optimizers
+combine fresh estimation, averaging, and transport. Here $H_{k+1}$ is
+a fresh unbiased estimate of $\nabla f(x_{k+1})$, and $D_{k+1}$ is a
+shared-sample gradient difference. The weights $\alpha,\beta\in[0,1]$
+control fresh estimation, while $\gamma$ scales MARS's transport correction.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}
+                  >{\raggedright\arraybackslash}p{0.43\textwidth}
+                  >{\raggedright\arraybackslash}p{0.31\textwidth}@{}}
+\toprule
+Method & Estimator at iteration $k+1$ & Role of transport \\
+\midrule
+SARAH / SPIDER
+& $H_{k+1}$ or $g_k+D_{k+1}$
+& Transport between periodic refreshes. \\
+\addlinespace[3pt]
+Geom-SARAH
+& $H_{k+1}$ or $g_k+D_{k+1}$
+& Transport for a geometric number of steps. \\
+\addlinespace[3pt]
+PAGE
+& $H_{k+1}$ or $g_k+D_{k+1}$
+& Refresh with probability $p$. \\
+\addlinespace[3pt]
+MARINA
+& $\nabla f(x_{k+1})$ or $g_k+D_{k+1}^{\mathcal Q}$
+& Communicate compressed gradient changes. \\
+\addlinespace[3pt]
+STORM / MVR
+& $\begin{aligned}[t]
+   &(1-\alpha)(g_k+D_{k+1})\\
+   &\quad+\alpha H_{k+1}
+   \end{aligned}$
+& Average fresh and transported estimates. \\
+\addlinespace[3pt]
+MARS (unclipped)
+& $\begin{aligned}[t]
+   &(1-\beta)(g_k+\gamma D_{k+1})\\
+   &\quad+\beta H_{k+1}
+   \end{aligned}$
+& Scale the transport correction within momentum. \\
+\bottomrule
+\end{tabular}
+\caption{Transport in modern optimizers. Rows with two alternatives
+select one branch according to a restart or refresh rule; the last two
+rows form weighted combinations. $D_{k+1}^{\mathcal Q}$ denotes an
+unbiased compressed increment. The identities describe estimators;
+batch sizes, stepsizes, and iterate updates belong to each algorithm.}
+\label{tab:transport-building-blocks}
+\end{table}
+
+SARAH and SPIDER use transport between gradient recomputations
+\citep{nguyen2017sarah,nguyen2017sarah_nonconvex,fang2018spider};
+Inexact SARAH allows batch initialization \citep{nguyen2021inexact},
+and Geom-SARAH randomizes phase lengths \citep{horvath2022adaptivity}.
+PAGE refreshes probabilistically \citep{li2021page}, while MARINA
+transports compressed differences \citep{gorbunov2021marina}.
+MVR/STORM averages fresh and transported estimates
+\citep{cutkosky2019momentum}; unclipped MARS includes MSGD at
+$\gamma=0$ and MVR at $\gamma=1$ \citep{yuan2025mars}.
+Appendix~\ref{app:algorithmic-details} gives the error recursions
+and explains why sample coupling, cached gradients, and clipping matter.
+
+SVRG \citep{NIPS2013_ac1dd209} and SAGA
+\citep{defazio2014sagafastincrementalgradient} also exploit gradient
+differences, but do not transport an estimate along successive iterates.
+SVRG uses an anchor point and its full gradient; SAGA uses stored
+component gradients and their average. Their standard estimates are
+conditionally unbiased, whereas TSGD inherits tracking error.
+Gradient differences also appear in decentralized gradient tracking,
+where agents combine local gradient changes with neighbors' information
+to track the network's average gradient \citep{Qu_2018}.
+
+\paragraph{Practical relevance.}
+SARAH and SARAH+ were evaluated on MNIST and CIFAR-10 classifiers
+\citep{nguyen2017sarah_nonconvex}, PAGE on LeNet, VGG, and ResNet
+\citep{li2021page}, and MARS on GPT-2 language models
+\citep{yuan2025mars}. These experiments use composite optimizers,
+not uninterrupted TSGD: even the paper analyzing SARAH-IN uses
+restarted SARAH/SARAH+ in its neural-network experiments.
+Some practical MARS variants also use different samples in their
+gradient corrections. These results do not establish pure TSGD's
+performance in isolation.
+
+\subsection{Why Combine Fundamental Estimators?}
+\label{subsec:why-combine-estimators}
+
+Modern optimizers combine fresh estimation, averaging, and transport
+through weighted averages or refreshes. Three considerations motivate
+these combinations.
+
+\emph{Computational efficiency.} Accurate gradient changes may require
+far fewer samples than accurate absolute gradients. Transport can then
+preserve an expensive initial estimate through many cheaper steps,
+despite using two evaluations per sample. More frequent refreshes limit
+error accumulation but reduce this saving.
+
+\emph{Complementary strengths.} Momentum averages past estimates to
+reduce noise, but can lag behind a rapidly changing gradient. Transport
+accounts for this change, while fresh gradients correct inherited and
+accumulated errors at the cost of introducing pointwise noise.
+MVR, STORM, and MARS combine these roles even in a fixed noise regime.
+
+\emph{Changing regimes.} Shorter steps tighten the similarity bound on
+new transport errors without removing old ones. Fresh gradients may
+also improve: their noise vanishes near the minimizer in
+Section~\ref{subsec:multiplicative-noise-comparison}, while transport
+retains a residual. The relative reliability of the two information
+sources can therefore change during a run. Choosing refresh frequencies
+or mixing weights requires balancing their accuracy and cost, generally
+without knowing their errors.
+
+\paragraph{Improved complexity through refreshing.}
+When BV and centered similarity hold together, SPIDER
+\citep{fang2018spider} and PAGE \citep{li2021page} exploit both assumptions
+by combining accurate gradient recomputations with cheaper transport.
+Refreshes limit how long transport errors accumulate, allowing larger
+steps without an expensive estimate at every iteration.
+Their prescribed batch sizes and refresh schedules give
+$O(\varepsilon^{-3})$ oracle complexity, compared with the
+$O(\varepsilon^{-4})$ guarantees for SGD and pure TSGD in
+Section~\ref{sec:tsgd-convergence}.
+The exponent three matches the lower bound of
+\citet{pmlr-v300-fradin26a} for zero-respecting algorithms on the same
+class (Appendix~\ref{app:common-class-lower-bound}).
+This comparison motivates combining estimators; it is not an
+$\Omega(\varepsilon^{-4})$ lower bound for pure TSGD.

@@ -1,0 +1,213 @@
+% !TEX root = ../main.tex
+\section{When Does TSGD Shine?}
+\label{sec:when-tsgd-shines}
+
+Through explicit examples, we now examine when TSGD benefits from
+accurate gradient changes and when SGD benefits from fresh estimates.
+We measure stationarity by the expected squared true-gradient norm,
+$G_k:=\mathbb E[\|\nabla f(x_k)\|^2]$, and show how initialization
+quality and noise variation affect the comparison.
+
+Alongside exact calculations, we use a vector least-squares model
+$f(x)=\tfrac12\mathbb E[\|Ax-b\|^2]$ as a running experiment.
+Its population Hessian is held fixed while feature variability sets
+$\delta$ and label noise varies independently
+(Section~\ref{subsec:understanding-similarity}).
+
+\subsection{Accurate Differences Despite Noisy Gradients}
+\label{subsec:additive-noise-comparison}
+
+Consider $f(x)=x^2/2$ and an unbiased oracle $h(x,\xi)=x+\xi$,
+where $\mathbb E[\xi]=0$ and $\mathbb E[\xi^2]=\sigma^2$.
+The individual gradients can be arbitrarily noisy, yet
+\[
+h(x,\xi)-h(y,\xi)=x-y=\nabla f(x)-\nabla f(y).
+\]
+Thus $\delta=0$, independently of $\sigma$. With exact
+initialization, TSGD follows gradient descent exactly. Indeed,
+$g_k=\nabla f(x_k)$ and an exact difference give
+\[
+g_{k+1}=g_k+\nabla f(x_{k+1})-\nabla f(x_k)=\nabla f(x_{k+1}).
+\]
+Induction from $g_0=\nabla f(x_0)$ proves this for any objective.
+Appendix~\ref{subsec:exact-init-exact-transport} gives the resulting
+GD convergence guarantee and proves that the gradients tend to zero.
+
+For the present quadratic, take $x_0=1$, $\eta=1$, and any initial
+estimate $g_0=1+e_0$ with $E_0=\mathbb E[e_0^2]<\infty$, biased or not.
+Then $x_1=-e_0$ and $g_1=g_0+(x_1-x_0)=0$, so TSGD stays at
+$x_k=-e_0$ for all $k\geq1$. SGD instead uses a fresh gradient at
+every update, giving $x_{k+1}=-\xi_k$. Consequently,
+\[
+\boxed{G_k^{\mathrm{TSGD}}=E_0,\qquad
+G_k^{\mathrm{SGD}}=\sigma^2,\qquad k\geq1.}
+\]
+Transport preserves the quality of its initial information, good or bad:
+TSGD has the smaller error when $E_0<\sigma^2$ and the larger error
+when $E_0>\sigma^2$. A single exact gradient evaluation at initialization,
+$g_0=\nabla f(x_0)$, gives $E_0=0$: TSGD reaches the minimizer in one
+step and $G_k^{\mathrm{TSGD}}=0$ for every $k\geq1$, without any further
+exact gradient evaluations. In contrast, single-sample initialization
+$g_0=h(x_0,\xi_0)$ gives the same error as SGD.
+
+Figure~\ref{fig:ls-main}(a) illustrates the same separation with varying
+features. Holding the initial estimate and feature draws fixed, TSGD's
+trajectories coincide across label-noise levels, while SGD's error floor
+increases with the label noise. TSGD nevertheless plateaus because
+$\delta>0$ and transport errors accumulate at a constant stepsize; without
+label noise, SGD eventually overtakes it, as the fresh-gradient example
+in Section~\ref{subsec:multiplicative-noise-comparison} also illustrates.
+
+\begin{figure}[t]
+  \centering
+  \begin{minipage}{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/least_squares_C.pdf}\\
+    \small (a) Label noise cancels from transport.
+  \end{minipage}\hfill
+  \begin{minipage}{0.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/least_squares_B.pdf}\\
+    \small (b) False convergence of the transported estimate.
+  \end{minipage}
+  \caption{Least-squares experiments with a common stepsize. (a) With exact
+  initialization and matched feature draws, TSGD's trajectories coincide
+  across label-noise levels, while SGD's error floor grows with the noise.
+  (b) With noiseless labels and variable features, SGD's true gradient
+  decays to zero, while TSGD's estimator vanishes but its true gradient
+  does not. Curves show means over 4,000 trajectories with pointwise bands
+  of $\pm2$ standard errors; the appendix gives the full setup.}
+  \label{fig:ls-main}
+\end{figure}
+
+
+\subsection{Fixed Noise Magnitude, Variable Similarity}
+\label{subsec:fixed-variance-variable-similarity}
+
+To determine whether noise magnitude alone explains the relative behavior
+of SGD and TSGD, we compare oracles with the same pointwise noise
+distribution but different noise variation. For $\omega\geq0$, consider
+\begin{equation}
+\label{eq:fixed-variance-oracle}
+f(x)=\frac L2x^2,\qquad
+h(x,\varphi)=Lx+\sqrt2\sigma\cos(\omega x+\varphi),
+\qquad \varphi\sim\operatorname{Unif}[0,2\pi).
+\end{equation}
+Each new sample is an independent phase; a transport difference
+uses the same phase at both endpoints. For the noise
+$r(x,\varphi)=h(x,\varphi)-Lx$,
+\begin{equation}
+\label{eq:phase-noise-moments}
+\mathbb E[r(x,\varphi)^2]=\sigma^2,\qquad
+\mathbb E[|r(x,\varphi)-r(y,\varphi)|^2]
+=4\sigma^2\sin^2\!\left(\frac{\omega(x-y)}2\right).
+\end{equation}
+The smallest global similarity constant is $\delta=\sigma\omega$
+(Appendix~\ref{app:sinusoidal-proof}). Pointwise noise has the same
+distribution for every $x$ and $\omega$, so SGD has identical
+expected squared-gradient dynamics at every frequency. TSGD,
+however, has exact transport at $\omega=0$, while its similarity
+constant grows as $\delta=\sigma\omega$. Its actual
+transport error depends on the displacement through the sine term.
+
+Simulations in Appendix~\ref{app:sinusoid} (Figure~\ref{fig:sinusoid})
+confirm this distinction. At small frequencies, TSGD retains accurate
+information despite persistent pointwise noise; at $\omega=2$, its error
+exceeds SGD's. Thus, at the same pointwise noise level and stepsize,
+changing the noise variation changes which method performs better.
+
+\subsection{When Fresh Gradients Are Preferable}
+\label{subsec:multiplicative-noise-comparison}
+
+Now let
+\begin{equation}
+\label{eq:multiplicative-comparison-oracle}
+f(x)=\frac{x^2}{2},\qquad h(x,a)=ax,\qquad
+\mathbb P(a=0)=\mathbb P(a=2)=\frac12,\qquad x_0=1.
+\end{equation}
+Here the gradient-noise variance is $x^2$: fresh gradients become
+exact at the minimizer, although global BV fails. Similarity holds
+with $\delta=1$. At the common stepsize $\eta=1/2$, each SGD sample
+either leaves the iterate unchanged or sends it to zero, so
+$G_k^{\mathrm{SGD}}=2^{-k}$. In contrast, exactly initialized TSGD
+satisfies $g_{k+1}=(1-a_{k+1}/2)g_k$. Its estimator becomes zero at
+the first sample $a_{k+1}=2$, wherever the iterate happens to be.
+The exact calculation in Appendix~\ref{app:multiplicative-details}
+gives
+\[
+g_k\longrightarrow0\quad\text{almost surely},\qquad
+G_k^{\mathrm{TSGD}}\longrightarrow\frac12.
+\]
+This is false convergence: the estimator tends to zero while the
+expected squared norm of the true gradient stays positive.
+Fresh information can therefore be
+preferable even when initialization is exact.
+
+Figure~\ref{fig:ls-main}(b) shows the same phenomenon on least squares
+with noiseless labels and highly variable features. SGD's true gradient
+decays in mean square, as does TSGD's estimator, but TSGD's expected
+squared true-gradient norm remains positive. A small transported
+estimate therefore does not certify a small true gradient.
+
+\subsection{What Transport Cannot Do}
+\label{subsec:four-case-summary}
+
+To separate the effects of initialization and transport, consider
+$f(x)=\lambda x^2/2$ and $h(x;a,b)=(\lambda+a)x+b$, with $\lambda>0$,
+independent noises satisfying $\mathbb E[a]=\mathbb E[b]=0$,
+$\mathbb E[a^2]=\delta^2$, and $\mathbb E[b^2]<\infty$.
+Shared sampling cancels $b$. Table~\ref{tab:four-error-regimes} summarizes
+the four cases, whose exact dynamics are developed in
+Appendix~\ref{app:quadratic-dynamics}.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Initialization & Exact transport & Stochastic transport\\
+\midrule
+Exact & Gradient descent & Accumulated transport error\\
+Inexact & Persistent initial error & Both errors and their interaction\\
+\bottomrule
+\end{tabular}
+\caption{Four regimes in the quadratic model, with a stable constant
+stepsize. The exact-transport identities also hold for general
+objectives; the explicit limiting errors and stability condition
+are established in Appendix~\ref{app:quadratic-dynamics}.}
+\label{tab:four-error-regimes}
+\end{table}
+
+\emph{Exact transport preserves initialization error.}
+The behavior in Section~\ref{subsec:additive-noise-comparison} extends
+beyond quadratics. When $\delta=0$, the error identity gives $e_k=e_0$, hence
+$g_k=\nabla f(x_k)+e_0$ for every $k$. With $e_0=0$ this is GD;
+otherwise it is GD on $f(x)+\langle e_0,x\rangle$. The reason is that
+adding a linear term leaves all gradient differences
+unchanged, so differences alone cannot recover a missing constant
+gradient offset
+(Appendix~\ref{subsec:inexact-init-exact-transport}).
+
+\emph{Stochastic transport can produce a nonzero error floor.}
+For $0<\eta<2\lambda/(\lambda^2+\delta^2)$ and
+$M_0:=\mathbb E[|g_0|^2]$, the exact quadratic dynamics give
+\begin{equation}
+\label{eq:quadratic-residual-overview}
+\lim_{k\to\infty}\mathbb E[|g_k|^2]=0,\qquad
+\lim_{k\to\infty}G_k
+=E_0+\frac{\eta\delta^2 M_0}{2\lambda-\eta(\lambda^2+\delta^2)}.
+\end{equation}
+With exact initialization, $M_0=\lambda^2x_0^2$: if $\delta>0$ and
+$x_0\ne0$, the estimate vanishes in mean square while the true gradient
+has a positive limiting mean-square norm.
+Appendix~\ref{subsec:exact-init-stochastic-transport} proves both limits.
+
+\emph{The two errors interact.} Initialization affects the residual
+directly through $E_0$ and indirectly through $M_0$, which controls the
+steps and the transport errors they generate. For centered initialization
+error, $M_0=\lambda^2x_0^2+E_0$, so improving the initial estimate reduces
+both contributions. Appendix~\ref{subsec:inexact-init-stochastic-transport}
+derives this interaction and the associated conservation law.
+Appendix~\ref{app:quad-numerics} varies initialization accuracy and
+similarity on least squares and compares the observed residuals with
+their exact limits.
